@@ -6,6 +6,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Register CounterState as scoped so it persists across pages for a user session
+builder.Services.AddScoped<CinemaSystem.Services.CounterState>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -16,7 +19,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 
 app.UseAntiforgery();
