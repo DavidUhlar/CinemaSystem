@@ -1,19 +1,38 @@
 ﻿@page "/counter"
-@rendermode InteractiveServer
+
+@inject CinemaSystem.Services.CounterState CounterState
 
 <PageTitle>Counter</PageTitle>
 
 <h1>Counter</h1>
 
-<p role="status">Current count: @currentCount</p>
+<p role="status">Current count: @CounterState.Count</p>
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<button class="btn btn-primary alert-danger" @onclick="ResetCounter">Reset me</button>
+
+@if (CounterState.Jozo) {
+    <div class="alert">We are so back</div>
+}
 
 @code {
-    private int currentCount = 0;
+    protected override void OnInitialized()
+    {
+        CounterState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        CounterState.OnChange -= StateHasChanged;
+    }
 
     private void IncrementCount()
     {
-        currentCount++;
+        CounterState.Increment();
+    }
+
+    private void ResetCounter()
+    {
+        CounterState.Reset();
     }
 }
