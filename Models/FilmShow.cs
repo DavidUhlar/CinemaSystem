@@ -14,6 +14,6 @@
         public int CinemaHallId { get; set; }
         public virtual CinemaHall CinemaHall { get; set; } = null!;
 
-        public virtual ICollection<SeatReservation> SeatReservations { get; set; } = new List<SeatReservation>();
+        public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
     }
 }

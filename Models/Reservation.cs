@@ -15,6 +15,6 @@
         public int CustomerId { get; set; }
         public virtual Customer Customer { get; set; } = null!;
 
-        public virtual ICollection<SeatReservation> SeatReservations { get; set; } = new List<SeatReservation>();
+        public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
     }
 }

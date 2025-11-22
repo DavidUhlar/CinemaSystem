@@ -1,4 +1,6 @@
 using CinemaSystem.Components;
+using CinemaSystem.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +11,17 @@ builder.Services.AddRazorComponents()
 // Register CounterState as scoped so it persists across pages for a user session
 builder.Services.AddScoped<CinemaSystem.Services.CounterState>();
 
+builder.Services.AddDbContext<CinemaDbContext>(options =>
+    options.UseSqlite("Data Source=cinema.db"));
+
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
+    db.Database.EnsureDeleted();
+    db.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

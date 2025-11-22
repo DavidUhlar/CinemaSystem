@@ -1,0 +1,51 @@
+@page "/cinemahalls"
+@using Microsoft.EntityFrameworkCore
+@inject CinemaSystem.Data.CinemaDbContext Db
+
+<PageTitle>Cinema Halls</PageTitle>
+
+<h1>Cinema Halls</h1>
+
+@if (halls == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!halls.Any())
+{
+    <p>No halls found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Total Rows</th>
+                <th>Seats / Row</th>
+                <th>Total Seats</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var h in halls)
+            {
+                <tr>
+                    <td>@h.Name</td>
+                    <td>@h.TotalRows</td>
+                    <td>@h.SeatsPerRow</td>
+                    <td>@h.Seats.Count()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+    private List<CinemaSystem.Models.CinemaHall>? halls;
+
+    protected override async Task OnInitializedAsync()
+    {
+        halls = await Db.CinemaHalls
+            .Include(h => h.Seats)
+            .OrderBy(h => h.Id)
+            .ToListAsync();
+    }
+}
