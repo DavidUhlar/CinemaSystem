@@ -34,7 +34,7 @@ namespace CinemaSystem.Data
 
             modelBuilder.Entity<FilmShow>()
                 .HasOne(f => f.CinemaHall)
-                .WithMany(h => h.FilmShows)
+                .WithMany(ch => ch.FilmShows)
                 .HasForeignKey(f => f.CinemaHallId);
 
             modelBuilder.Entity<Reservation>()
@@ -43,21 +43,25 @@ namespace CinemaSystem.Data
                 .HasForeignKey(r => r.CustomerId);
 
             modelBuilder.Entity<Ticket>()
-                .HasOne(sr => sr.FilmShow)
+                .HasOne(t => t.FilmShow)
                 .WithMany(f => f.Tickets)
-                .HasForeignKey(sr => sr.FilmShowId);
+                .HasForeignKey(t => t.FilmShowId);
 
             modelBuilder.Entity<Ticket>()
-                .HasOne(sr => sr.Seat);
+                .HasOne(t => t.Seat)
+                .WithMany()
+                .HasForeignKey(t => t.SeatId); ;
 
             modelBuilder.Entity<Ticket>()
-                .HasOne(sr => sr.Reservation)
+                .HasOne(t => t.Reservation)
                 .WithMany(r => r.Tickets)
-                .HasForeignKey(sr => sr.ReservationId);
+                .HasForeignKey(t => t.ReservationId);
 
-            modelBuilder.Entity<SeatReservation>()
-                .HasIndex(sr => new { sr.FilmShowId, sr.SeatId })
+            modelBuilder.Entity<Ticket>()
+                .HasIndex(t => new { t.FilmShowId, t.SeatId })
                 .IsUnique();
+
+
             SeedData(modelBuilder);
         }
 
