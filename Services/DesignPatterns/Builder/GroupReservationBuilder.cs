@@ -27,7 +27,7 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
             {
                 Tickets = new List<Ticket>(),
                 Status = ReservationStatus.Pending,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
             return this;
         }
@@ -36,6 +36,24 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
         {
             reservation.Customer = customer;
             reservation.CustomerId = customer.Id;
+            return this;
+        }
+
+        public IReservationBuilder SetReservationNote(string note)
+        {
+            reservation.ReservationNote = note;
+            return this;
+        }
+
+        public IReservationBuilder SetReservationPurpose(ReservationPurpose purpose)
+        {
+            reservation.Purpose = purpose;
+            return this;
+        }
+
+        public IReservationBuilder SetReservationType(ReservationType type)
+        {
+            reservation.Type = ReservationType.Group;
             return this;
         }
 

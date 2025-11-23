@@ -4,27 +4,54 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
 {
     public class ReservationDirector
     {
-        public Reservation CreateStandardReservation(Customer customer, List<Ticket> tickets)
+        public Reservation CreateStandardReservationOneTicket(Customer customer, Ticket ticket, string? note = null)
         {
             var builder = new ReservationBuilder();
 
-            return builder
+            builder
+                .SetCustomer(customer)
+                .SetTicket(ticket)
+                .SetReservationType(ReservationType.Standard);
+            if (!string.IsNullOrEmpty(note))
+            {
+                builder.SetReservationNote(note);
+            }
+            return builder.Build();
+        }
+
+        public Reservation CreateStandardReservation(Customer customer, List<Ticket> tickets, string? note = null)
+        {
+            var builder = new ReservationBuilder();
+
+            builder
                 .SetCustomer(customer)
                 .SetTickets(tickets)
-                .Build();
+                .SetReservationType(ReservationType.Standard);
+            if (!string.IsNullOrEmpty(note))
+            {
+                builder.SetReservationNote(note);
+            }
+            return builder.Build();
         }
         
-        public Reservation CreateGroupReservation(Customer customer, List<Ticket> tickets)
+        public Reservation CreateGroupReservation(Customer customer, List<Ticket> tickets, ReservationPurpose purpose, string? note = null)
         {
             var builder = new GroupReservationBuilder();
 
-            return builder
+            builder
                 .SetCustomer(customer)
                 .SetTickets(tickets)
-                .Build();
+                .SetReservationPurpose(purpose)
+                .SetReservationType(ReservationType.Group);
+            if (!string.IsNullOrEmpty(note))
+            {
+                builder.SetReservationNote(note);
+            }
+
+            return builder.Build();
         }
         
-
+        /*
         public Reservation CreateReservation(Customer customer, List<Ticket> tickets)
         {
             if (tickets.Count >= 5)
@@ -36,5 +63,6 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
                 return CreateStandardReservation(customer, tickets);
             }
         }
+        */
     }
 }
