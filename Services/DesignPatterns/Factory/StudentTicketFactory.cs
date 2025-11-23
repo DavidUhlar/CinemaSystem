@@ -5,7 +5,6 @@ namespace CinemaSystem.Services.DesignPatterns.Factory
 {
     public class StudentTicketFactory : ITicketFactory
     {
-        private readonly decimal studentPrice = 0.8m;
         public Ticket CreateTicket(Event eventShow, Seat seat)
         {  
             return new Ticket
@@ -14,7 +13,7 @@ namespace CinemaSystem.Services.DesignPatterns.Factory
                 EventId = eventShow.Id,
                 Seat = seat,
                 SeatId = seat.Id,
-                Price = eventShow.BasePrice * studentPrice,
+                Price = eventShow.BasePrice,
                 Type = TicketType.Student
             };
         }

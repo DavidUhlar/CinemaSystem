@@ -4,8 +4,6 @@ namespace CinemaSystem.Services.DesignPatterns.Factory
 {
     public class SeniorTicketFactory : ITicketFactory
     {
-        private readonly decimal seniorPrice = 0.6m;
-    
         
         public Ticket CreateTicket(Event eventShow, Seat seat)
         {
@@ -15,7 +13,7 @@ namespace CinemaSystem.Services.DesignPatterns.Factory
                 EventId = eventShow.Id,
                 Seat = seat,
                 SeatId = seat.Id,
-                Price = eventShow.BasePrice * seniorPrice,
+                Price = eventShow.BasePrice,
                 Type = TicketType.Senior
             };
         }
