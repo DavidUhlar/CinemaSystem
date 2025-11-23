@@ -15,8 +15,6 @@ namespace CinemaSystem.Models
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        public CustomerType Type { get; set; }
-
         public virtual ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
     }
 }

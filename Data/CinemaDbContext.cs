@@ -10,10 +10,12 @@ namespace CinemaSystem.Data
         {
         }
 
+        public DbSet<Event> Events { get; set; }
+        public DbSet<Concert> Concerts { get; set; }
+        public DbSet<FilmShow> FilmShows { get; set; }
         public DbSet<Movie> Movies { get; set; }
         public DbSet<CinemaHall> CinemaHalls { get; set; }
         public DbSet<Seat> Seats { get; set; }
-        public DbSet<FilmShow> FilmShows { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
@@ -22,20 +24,26 @@ namespace CinemaSystem.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Event>()
+                .HasDiscriminator<EventType>(e => e.Type)
+                .HasValue<FilmShow>(EventType.Film)
+                .HasValue<Concert>(EventType.Concert);
+
             modelBuilder.Entity<Seat>()
                 .HasOne(s => s.CinemaHall)
                 .WithMany(h => h.Seats)
                 .HasForeignKey(s => s.CinemaHallId);
 
-            modelBuilder.Entity<FilmShow>()
-                .HasOne(f => f.Movie)
-                .WithMany()
-                .HasForeignKey(f => f.MovieId);
+            modelBuilder.Entity<Event>()
+                .HasOne(e => e.CinemaHall)
+                .WithMany(ch => ch.Events)
+                .HasForeignKey(e => e.CinemaHallId);
 
             modelBuilder.Entity<FilmShow>()
-                .HasOne(f => f.CinemaHall)
-                .WithMany(ch => ch.FilmShows)
-                .HasForeignKey(f => f.CinemaHallId);
+                .HasOne(f => f.Movie)
+                .WithMany(m => m.FilmShows)
+                .HasForeignKey(f => f.MovieId);
+
 
             modelBuilder.Entity<Reservation>()
                 .HasOne(r => r.Customer)
@@ -43,9 +51,9 @@ namespace CinemaSystem.Data
                 .HasForeignKey(r => r.CustomerId);
 
             modelBuilder.Entity<Ticket>()
-                .HasOne(t => t.FilmShow)
+                .HasOne(t => t.Event)
                 .WithMany(f => f.Tickets)
-                .HasForeignKey(t => t.FilmShowId);
+                .HasForeignKey(t => t.EventId);
 
             modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.Seat)
@@ -58,9 +66,20 @@ namespace CinemaSystem.Data
                 .HasForeignKey(t => t.ReservationId);
 
             modelBuilder.Entity<Ticket>()
-                .HasIndex(t => new { t.FilmShowId, t.SeatId })
+                .HasIndex(t => new { t.EventId, t.SeatId })
                 .IsUnique();
 
+            modelBuilder.Entity<Ticket>()
+                .Property(t => t.Price)
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Reservation>()
+                .Property(r => r.TotalPrice)
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Event>()
+                .Property(e => e.BasePrice)
+                .HasPrecision(10, 2);
 
             SeedData(modelBuilder);
         }
@@ -128,9 +147,27 @@ namespace CinemaSystem.Data
         {
             return new List<FilmShow>
             {
-                new FilmShow { Id = 1, MovieId = 1, CinemaHallId = 1, StartTime = DateTime.Now.AddHours(2) },
-                new FilmShow { Id = 2, MovieId = 2, CinemaHallId = 2, StartTime = DateTime.Now.AddHours(3) },
-                new FilmShow { Id = 3, MovieId = 3, CinemaHallId = 3, StartTime = DateTime.Now.AddHours(4) }
+                new FilmShow { 
+                    Id = 1, 
+                    MovieId = 1, 
+                    CinemaHallId = 1, 
+                    StartTime = DateTime.Now.AddHours(2),
+                    Type = EventType.Film
+                },
+                new FilmShow { 
+                    Id = 2, 
+                    MovieId = 2, 
+                    CinemaHallId = 2, 
+                    StartTime = DateTime.Now.AddHours(3),
+                    Type = EventType.Film
+                },
+                new FilmShow { 
+                    Id = 3, 
+                    MovieId = 3, 
+                    CinemaHallId = 3, 
+                    StartTime = DateTime.Now.AddHours(4),
+                    Type = EventType.Film
+                }
             };
         }
 
@@ -138,7 +175,7 @@ namespace CinemaSystem.Data
         {
             return new List<Customer>
             {
-                new Customer { Id = 1, FirstName = "John", LastName="Doe", Email = "mail@gmail.com" }
+                new Customer { Id = 1, FirstName = "Jozko", LastName="Ferko", Email = "mail@gmail.com" }
             };
         }
     }

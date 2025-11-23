@@ -8,6 +8,6 @@
         public int SeatsPerRow { get; set; }
 
         public virtual ICollection<Seat> Seats { get; set; } = new List<Seat>();
-        public virtual ICollection<FilmShow> FilmShows { get; set; } = new List<FilmShow>();
+        public virtual ICollection<Event> Events { get; set; } = new List<Event>();
     }
 }

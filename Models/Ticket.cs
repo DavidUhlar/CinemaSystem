@@ -4,12 +4,12 @@
     {
         public int Id { get; set; }
 
-        public TicketType Status { get; set; }
-
         public decimal Price { get; set; }
 
-        public int FilmShowId { get; set; }
-        public virtual FilmShow FilmShow { get; set; } = null!;
+        public TicketType Type { get; set; }
+
+        public int EventId { get; set; }
+        public virtual Event Event { get; set; } = null!;
 
         public int ReservationId { get; set; }
         public virtual Reservation Reservation { get; set; } = null!;
