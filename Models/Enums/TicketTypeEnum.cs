@@ -1,6 +1,8 @@
 ﻿public enum TicketType
 {
     Standard,
-    Premium
+    Student,
+    Senior,
+    VIP
 }
 
