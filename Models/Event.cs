@@ -3,9 +3,9 @@
     public abstract class Event
     {
         public int Id { get; set; }
-
         public DateTime StartTime { get; set; }
-
+        public required string Title { get; set; }
+        public required string Description { get; set; }
         public decimal BasePrice { get; set; }
         public EventType Type { get; set; }
 
