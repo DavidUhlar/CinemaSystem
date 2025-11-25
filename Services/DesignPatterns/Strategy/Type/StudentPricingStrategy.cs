@@ -1,10 +1,10 @@
 ﻿using CinemaSystem.Models;
 
-namespace CinemaSystem.Services.DesignPatterns.Strategy
+namespace CinemaSystem.Services.DesignPatterns.Strategy.Type
 {
-    public class VipPricingStrategy : IPricingStrategy
+    public class StudentPricingStrategy : IPricingStrategy
     {
-        private const decimal FilmShowMultiplier = 1.5m;
+        private const decimal FilmShowDiscount = 0.8m;
         private const decimal ConcertDiscount = 0.9m;
 
         public decimal CalculatePrice(decimal basePrice, Event eventShow)
@@ -12,7 +12,9 @@ namespace CinemaSystem.Services.DesignPatterns.Strategy
             switch (eventShow.Type)
             {
                 case EventType.Film:
-                    return basePrice * FilmShowMultiplier;
+                    return basePrice * FilmShowDiscount;
+                case EventType.Concert:
+                    return basePrice * ConcertDiscount;
                 default:
                     return basePrice;
             }

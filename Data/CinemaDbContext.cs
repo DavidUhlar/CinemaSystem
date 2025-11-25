@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using CinemaSystem.Models;
+﻿using CinemaSystem.Models;
+using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace CinemaSystem.Data
 {
@@ -13,7 +14,6 @@ namespace CinemaSystem.Data
         public DbSet<Event> Events { get; set; }
         public DbSet<Concert> Concerts { get; set; }
         public DbSet<FilmShow> FilmShows { get; set; }
-        public DbSet<Movie> Movies { get; set; }
         public DbSet<CinemaHall> CinemaHalls { get; set; }
         public DbSet<Seat> Seats { get; set; }
         public DbSet<Customer> Customers { get; set; }
@@ -38,12 +38,6 @@ namespace CinemaSystem.Data
                 .HasOne(e => e.CinemaHall)
                 .WithMany(ch => ch.Events)
                 .HasForeignKey(e => e.CinemaHallId);
-
-            modelBuilder.Entity<FilmShow>()
-                .HasOne(f => f.Movie)
-                .WithMany(m => m.FilmShows)
-                .HasForeignKey(f => f.MovieId);
-
 
             modelBuilder.Entity<Reservation>()
                 .HasOne(r => r.Customer)
@@ -98,9 +92,6 @@ namespace CinemaSystem.Data
             var seats = GenerateSeatsForHalls(halls);
             modelBuilder.Entity<Seat>().HasData(seats);
 
-            var movies = GenerateMovies();
-            modelBuilder.Entity<Movie>().HasData(movies);
-
             var filmShows = GenerateFilmShows();
             modelBuilder.Entity<FilmShow>().HasData(filmShows);
 
@@ -133,37 +124,45 @@ namespace CinemaSystem.Data
             return seats;
         }
 
-        private List<Movie> GenerateMovies()
-        {
-            return new List<Movie>
-            {
-                new Movie { Id = 1, Title = "Inception", Description = "Thriller by Christopher Nolan.", ageRestriction = AgeEnum.Age15, genre = Genre.SciFi },
-                new Movie { Id = 2, Title = "The Godfather", Description = "A classic mafia drama.", ageRestriction = AgeEnum.Age18, genre = Genre.Drama },
-                new Movie { Id = 3, Title = "Toy Story", Description = "An animated adventure for all ages.", ageRestriction = AgeEnum.Age12, genre = Genre.Animation }
-            };
-        }
-
         private List<FilmShow> GenerateFilmShows()
         {
             return new List<FilmShow>
             {
                 new FilmShow { 
-                    Id = 1, 
-                    MovieId = 1, 
+                    Id = 1,
+                    Title = "Inception",
+                    Description = "Thriller by Christopher Nolan.",
+                    AgeRestriction = AgeEnum.Age15, 
+                    Genre = Genre.Thriller,
+                    LengthInMinutes = 148,
+                    Director = "Christopher Nolan",
+                    BasePrice = 10.00m,
                     CinemaHallId = 1, 
                     StartTime = DateTime.Now.AddHours(2),
                     Type = EventType.Film
                 },
                 new FilmShow { 
-                    Id = 2, 
-                    MovieId = 2, 
+                    Id = 2,
+                    Title = "The Godfather", 
+                    Description = "A classic mafia drama.", 
+                    AgeRestriction = AgeEnum.Age18, 
+                    Genre = Genre.Drama,
+                    LengthInMinutes = 175,
+                    Director = "Francis Ford Coppola",
+                    BasePrice = 10.50m,
                     CinemaHallId = 2, 
                     StartTime = DateTime.Now.AddHours(3),
                     Type = EventType.Film
                 },
                 new FilmShow { 
-                    Id = 3, 
-                    MovieId = 3, 
+                    Id = 3,
+                    Title = "Toy Story", 
+                    Description = "An animated adventure for all ages.", 
+                    AgeRestriction = AgeEnum.Age12, 
+                    Genre = Genre.Animation,
+                    LengthInMinutes = 81,
+                    Director = "John Lasseter",
+                    BasePrice = 9.50m,
                     CinemaHallId = 3, 
                     StartTime = DateTime.Now.AddHours(4),
                     Type = EventType.Film
