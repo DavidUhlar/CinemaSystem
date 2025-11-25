@@ -1,4 +1,5 @@
-﻿using CinemaSystem.Services.DesignPatterns.Strategy.Time;
+﻿using CinemaSystem.Models;
+using CinemaSystem.Services.DesignPatterns.Strategy.Time;
 using CinemaSystem.Services.DesignPatterns.Strategy.Type;
 
 namespace CinemaSystem.Services.DesignPatterns.Strategy
@@ -14,6 +15,19 @@ namespace CinemaSystem.Services.DesignPatterns.Strategy
             strategies.Add(new WeekendFilmPricingStrategy());
             strategies.Add(new EarlyConcertPricingStrategy());
             strategyType = getPricingStrategyType(ticketType);
+        }
+
+        public decimal CalculateFinalPrice(Event eventItem)
+        {
+            var currentPrice = eventItem.BasePrice;
+
+            foreach (var strategy in strategies)
+            {
+                currentPrice = strategy.CalculatePrice(currentPrice, eventItem);
+            }
+            currentPrice = strategyType.CalculatePrice(currentPrice, eventItem);
+
+            return currentPrice;
         }
 
         private IPricingStrategy getPricingStrategyType(TicketType ticketType)
