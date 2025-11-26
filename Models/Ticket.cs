@@ -3,9 +3,7 @@
     public class Ticket
     {
         public int Id { get; set; }
-
         public decimal Price { get; set; }
-
         public TicketType Type { get; set; }
 
         public int EventId { get; set; }
@@ -16,5 +14,13 @@
 
         public int SeatId { get; set; }
         public virtual Seat Seat { get; set; } = null!;
+
+        public int? FoodItemId { get; set; }
+        public virtual CateringItem? FoodItem { get; set; }
+
+        public int? DrinkItemId { get; set; }
+        public virtual CateringItem? DrinkItem { get; set; }
+
+        public decimal TotalPrice { get; set; }
     }
 }

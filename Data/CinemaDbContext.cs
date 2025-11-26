@@ -19,6 +19,7 @@ namespace CinemaSystem.Data
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<CateringItem> CateringItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -60,6 +61,18 @@ namespace CinemaSystem.Data
                 .HasForeignKey(t => t.ReservationId);
 
             modelBuilder.Entity<Ticket>()
+            .HasOne(t => t.FoodItem)
+            .WithMany()
+            .HasForeignKey(t => t.FoodItemId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Ticket>()
+                .HasOne(t => t.DrinkItem)
+                .WithMany()
+                .HasForeignKey(t => t.DrinkItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Ticket>()
                 .HasIndex(t => new { t.EventId, t.SeatId })
                 .IsUnique();
 
@@ -97,6 +110,9 @@ namespace CinemaSystem.Data
 
             var customers = GenerateCustomers();
             modelBuilder.Entity<Customer>().HasData(customers);
+
+            var catering = GenerateCatering();
+            modelBuilder.Entity<CateringItem>().HasData(catering);
         }
 
         private List<Seat> GenerateSeatsForHalls(List<CinemaHall> halls)
@@ -175,6 +191,24 @@ namespace CinemaSystem.Data
             return new List<Customer>
             {
                 new Customer { Id = 1, FirstName = "Jozko", LastName="Ferko", Email = "mail@gmail.com" }
+            };
+        }
+
+        private List<CateringItem> GenerateCatering()
+        {
+            return new List<CateringItem>
+            {
+                // popcorn
+                new CateringItem { Id = 1, Type = CateringType.Popcorn, Size = CateringSize.Small, Price = 2.50m },
+                new CateringItem { Id = 2, Type = CateringType.Popcorn, Size = CateringSize.Medium, Price = 3.50m },
+                new CateringItem { Id = 3, Type = CateringType.Popcorn, Size = CateringSize.Large, Price = 4.50m },
+                new CateringItem { Id = 4, Type = CateringType.Popcorn, Size = CateringSize.XXL, Price = 6.00m },
+        
+                // drink
+                new CateringItem { Id = 5, Type = CateringType.Drink, Size = CateringSize.Small, Price = 2.00m },
+                new CateringItem { Id = 6, Type = CateringType.Drink, Size = CateringSize.Medium, Price = 3.00m },
+                new CateringItem { Id = 7, Type = CateringType.Drink, Size = CateringSize.Large, Price = 4.00m },
+                new CateringItem { Id = 8, Type = CateringType.Drink, Size = CateringSize.XXL, Price = 5.50m }
             };
         }
     }
