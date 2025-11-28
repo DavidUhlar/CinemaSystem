@@ -22,5 +22,6 @@
         public virtual CateringItem? DrinkItem { get; set; }
 
         public decimal TotalPrice { get; set; }
+        public string TotalDescription { get; set; }
     }
 }

@@ -3,6 +3,7 @@
     TeamBuilding,
     Birthday,
     School,
-    Other
+    Other,
+    None
 }
 

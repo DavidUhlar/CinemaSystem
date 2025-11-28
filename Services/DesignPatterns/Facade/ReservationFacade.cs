@@ -1,0 +1,95 @@
+﻿using CinemaSystem.Data;
+using CinemaSystem.Models;
+using CinemaSystem.Services.DesignPatterns.Builder;
+using CinemaSystem.Services.DesignPatterns.Command;
+using CinemaSystem.Services.DesignPatterns.Decorator;
+using CinemaSystem.Services.DesignPatterns.Factory;
+using CinemaSystem.Services.DesignPatterns.Factory.Singleton;
+using CinemaSystem.Services.DesignPatterns.Strategy;
+
+namespace CinemaSystem.Services.DesignPatterns.Facade
+{
+    public class ReservationFacade
+    {
+        private readonly CinemaDbContext cinemaDb;
+        private readonly FactorySingleton factorySingleton;
+        public ReservationFacade(CinemaDbContext cinemaDbContext) 
+        {
+            cinemaDb = cinemaDbContext;
+            factorySingleton = FactorySingleton.GetInstance();
+        }
+
+        public Ticket CreateTicket(int eventId, int seatId, TicketType ticketType)
+        {
+            Event eventEntity = cinemaDb.Events.Find(eventId)!;
+            Seat seatEntity = cinemaDb.Seats.Find(seatId)!;
+
+            ITicketFactory factory = factorySingleton.GetFactory(ticketType);
+
+            Ticket ticket = factory.CreateTicket(eventEntity, seatEntity);
+
+            ApplyPricingStrategy pricingStrategy = new ApplyPricingStrategy(ticketType);
+            ticket.Price = pricingStrategy.CalculateFinalPrice(eventEntity);
+
+            return ticket;
+        }
+
+        public void ApplyCateringToTicket(Ticket ticket, int? foodId, int? drinkId)
+        {
+            IClientTicket componentDecorator = new ClientTicket(ticket);
+
+            if (foodId.HasValue)
+            {
+                CateringItem food = cinemaDb.CateringItems.Find(foodId.Value)!;
+                componentDecorator = new FoodDecorator(componentDecorator, food);
+                ticket.FoodItemId = foodId;
+                ticket.FoodItem = food;
+            }
+
+            if (drinkId.HasValue)
+            {
+                CateringItem drink = cinemaDb.CateringItems.Find(drinkId.Value)!;
+                componentDecorator = new DrinkDecorator(componentDecorator, drink);
+                ticket.DrinkItemId = drinkId;
+                ticket.DrinkItem = drink;
+            }
+
+            ticket.TotalPrice = componentDecorator.GetTotalPrice();
+            ticket.TotalDescription = componentDecorator.GetDescription();
+        }
+        public Reservation CreateReservation(int customerId, List<Ticket> tickets, ReservationPurpose? reservationPurpose, string? note = null)
+        {
+            Customer customer = cinemaDb.Customers.Find(customerId)!;
+
+            ReservationDirector director = new ReservationDirector();
+
+            Reservation reservation;
+            if (tickets.Count == 1)
+            {
+                reservation = director.CreateStandardReservationOneTicket(customer, tickets[0], note);
+            }
+            else if (tickets.Count > 5)
+            {
+                var reservationPurposeTemp = reservationPurpose ?? ReservationPurpose.None;
+                reservation = director.CreateGroupReservation(customer, tickets, reservationPurposeTemp, note);
+            }
+            else
+            {
+                reservation = director.CreateStandardReservation(customer, tickets, note);
+            }
+
+            ReservationInvoker invoker = new ReservationInvoker();
+            CreateReservationCommand command = new CreateReservationCommand(cinemaDb, reservation);
+            invoker.ExecuteCommand(command);
+            return reservation;
+            
+        }
+
+        public void CancelReservation(int reservationId)
+        {
+            ReservationInvoker invoker = new ReservationInvoker();
+            CancelReservationCommand command = new CancelReservationCommand(cinemaDb, reservationId);
+            invoker.ExecuteCommand(command);
+        }
+    }
+}
