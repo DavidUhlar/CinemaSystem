@@ -1,0 +1,32 @@
+﻿<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Create Reservation for @Event?.Title</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (Event != null)
+        {
+            <MudText>Event: @Event.Title</MudText>
+            <MudText>Start Time: @Event.StartTime.ToString("g")</MudText>
+            <MudText>Base Price: @Event.BasePrice.ToString("C")</MudText>
+            <MudText>Hall: @Event.CinemaHall?.Name</MudText>
+        }
+        <MudTextField @bind-Value="customerName" Label="Customer Name" Required="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Create Reservation</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public Event? Event { get; set; }
+
+    private string customerName = "";
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(customerName));
+    private void Cancel() => MudDialog.Cancel();
+}

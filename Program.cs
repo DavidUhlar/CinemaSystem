@@ -1,12 +1,15 @@
 using CinemaSystem.Components;
 using CinemaSystem.Data;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddMudServices();
 
 // scoped for a user session
 builder.Services.AddScoped<CinemaSystem.Services.CounterState>();

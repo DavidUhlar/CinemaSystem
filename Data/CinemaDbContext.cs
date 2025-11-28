@@ -97,9 +97,9 @@ namespace CinemaSystem.Data
 
             var halls = new List<CinemaHall>
             {
-                new CinemaHall { Id = 1, Name = "Sála 1", TotalRows = 5, SeatsPerRow = 8 },
-                new CinemaHall { Id = 2, Name = "Sála 2", TotalRows = 6, SeatsPerRow = 10 },
-                new CinemaHall { Id = 3, Name = "VIP Sála", TotalRows = 3, SeatsPerRow = 6 }
+                new CinemaHall { Id = 1, Name = "Hall A", TotalRows = 5, SeatsPerRow = 8 },
+                new CinemaHall { Id = 2, Name = "Hall B", TotalRows = 6, SeatsPerRow = 10 },
+                new CinemaHall { Id = 3, Name = "Hall C", TotalRows = 3, SeatsPerRow = 6 }
             };
             modelBuilder.Entity<CinemaHall>().HasData(halls);
 

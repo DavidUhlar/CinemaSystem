@@ -1,4 +1,4 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@* <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">CinemaSystem</a>
     </div>
@@ -31,5 +31,23 @@
             </NavLink>
         </div>
     </nav>
-</div>
+</div> *@
+
+<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">
+        Home
+    </MudNavLink>
+    <MudNavLink Href="counter" Icon="@Icons.Material.Filled.Add">
+        Counter
+    </MudNavLink>
+    <MudNavLink Href="weather" Icon="@Icons.Material.Filled.List">
+        Weather
+    </MudNavLink>
+    <MudNavLink Href="cinemahalls" Icon="@Icons.Material.Filled.EventSeat">
+        Cinema Halls
+    </MudNavLink>
+    <MudNavLink Href="events" Icon="@Icons.Material.Filled.Event">
+        Events
+    </MudNavLink>
+</MudNavMenu>
 

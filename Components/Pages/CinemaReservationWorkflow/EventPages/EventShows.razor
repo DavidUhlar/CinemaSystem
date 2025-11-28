@@ -1,0 +1,59 @@
+@page "/events"
+@using CinemaSystem.Models
+@using Microsoft.EntityFrameworkCore
+@inject CinemaSystem.Data.CinemaDbContext Db
+@inject IDialogService DialogService
+
+<PageTitle>Events</PageTitle>
+
+<h1>Events</h1>
+
+@if (events == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <MudTable Items="events" Dense="true" Hover="true" Elevation="0" Class="mud-table-root">
+        <HeaderContent>
+            <MudTh>Type</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Description</MudTh>
+            <MudTh>Hall</MudTh>
+            <MudTh>Start Time</MudTh>
+            <MudTh>Base Price</MudTh>
+            <MudTh>Create reservation</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Type">@context.Type</MudTd>
+            <MudTd DataLabel="Name">@context.Title</MudTd>
+            <MudTd DataLabel="Description">@context.Description</MudTd>
+            <MudTd DataLabel="Hall">@context.CinemaHall?.Name</MudTd>
+            <MudTd DataLabel="Start Time">@context.StartTime.ToString("g")</MudTd>
+            <MudTd DataLabel="Base Price">@context.BasePrice.ToString("C")</MudTd>
+            <MudTd>
+                <MudButton OnClick="@(()=>OpenDialogAsync(context))" Variant="Variant.Filled" Color="Color.Primary">
+                    <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" />
+                    <MudText Class="ml-2">Reserve</MudText>
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private List<Event>? events;
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await Db.Events.Include(e => e.CinemaHall).ToListAsync();
+    }
+
+    private Task OpenDialogAsync(Event eventItem)
+    {
+        var parameters = new DialogParameters { ["Event"] = eventItem };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        return DialogService.ShowAsync<EventReservationStartDialog>("Simple Dialog", parameters, options);
+    }
+}
