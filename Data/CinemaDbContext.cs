@@ -58,7 +58,8 @@ namespace CinemaSystem.Data
             modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.Reservation)
                 .WithMany(r => r.Tickets)
-                .HasForeignKey(t => t.ReservationId);
+                .HasForeignKey(t => t.ReservationId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Ticket>()
             .HasOne(t => t.FoodItem)
