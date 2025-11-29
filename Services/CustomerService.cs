@@ -1,0 +1,55 @@
+﻿using CinemaSystem.Data;
+using CinemaSystem.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace CinemaSystem.Services
+{
+    public class CustomerService
+    {
+        private readonly CinemaDbContext db;
+
+        public CustomerService(CinemaDbContext db)
+        {
+            this.db = db;
+        }
+
+        public async Task<Event?> GetEventByIdAsync(int id)
+        {
+            return await db.Events
+                .Include(e => e.CinemaHall)
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<List<Event>> GetUpcomingEventsAsync()
+        {
+            return await db.Events
+                .Include(e => e.CinemaHall)
+                .Where(e => e.StartTime > DateTime.Now)
+                .OrderBy(e => e.StartTime)
+                .ToListAsync();
+        }
+
+        public async Task<Customer> CreateCustomerAsync(Customer newCustomer)
+        {
+            db.Customers.Add(newCustomer);
+            await db.SaveChangesAsync();
+            return newCustomer;
+        }
+
+        public async Task UpdateCustomerAsync(Customer updatedCustomer)
+        {
+            db.Customers.Update(updatedCustomer);
+            await db.SaveChangesAsync();
+        }
+
+        public async Task DeleteCustomerAsync(int id)
+        {
+            var customerToDelete = await db.Customers.FindAsync(id);
+            if (customerToDelete != null)
+            {
+                db.Customers.Remove(customerToDelete);
+                await db.SaveChangesAsync();
+            }
+        }
+    }
+}

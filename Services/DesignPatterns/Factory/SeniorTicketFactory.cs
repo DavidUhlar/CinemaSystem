@@ -9,9 +9,7 @@ namespace CinemaSystem.Services.DesignPatterns.Factory
         {
             return new Ticket
             {
-                Event = eventShow,
                 EventId = eventShow.Id,
-                Seat = seat,
                 SeatId = seat.Id,
                 Price = eventShow.BasePrice,
                 Type = TicketType.Senior

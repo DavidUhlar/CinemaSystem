@@ -1,0 +1,212 @@
+﻿
+@inject ReservationStateService ReservationStateService
+@inject CinemaHallService CinemaHallService
+@inject SeatService SeatService
+@inject EventService EventService
+@inject ReservationStateAsyncInvoker ReservationStateAsyncInvoker
+@inject ProtectedSessionStorage ProtectedSessionStorage
+@inject NavigationManager NavigationManager
+@inject ReservationFacade ReservationFacade
+
+<h3>Seat selection</h3>
+@if (selectedHall != null)
+{
+    <MudTable Items="matrixRows" Dense="true" Hover="false" Elevation="0">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Seats — @selectedHall.Name</MudText>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh></MudTh>
+            @for (int seatNumber = 1; seatNumber <= selectedHall.SeatsPerRow; seatNumber++)
+            {
+                var n = seatNumber;
+                <MudTh Class="text-center">@n</MudTh>
+            }
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd><b>Row @context.RowNumber</b></MudTd>
+            @foreach (var seat in context.Seats)
+            {
+                <MudTd Class="text-center">
+                    @if (seat is not null)
+                    {
+                        var isOccupied = IsSeatSelected(seat);
+                        var isSelected = selectedSeats.Contains(seat);
+
+                        <MudButton Variant="@(isSelected? Variant.Filled: Variant.Outlined)" Color="@GetSeatColor(seat, isOccupied, isSelected)" Disabled="@isOccupied"
+                                   OnClick="@(() => ToggleSeat(seat))">
+                            @seat.Number
+                        </MudButton>
+                    }
+                </MudTd>
+            }
+        </RowTemplate>
+    </MudTable>
+    @if (selectedSeats.Count > 0)
+    {
+        <MudPaper Class="pa-4 mt-4">
+            <MudText Typo="Typo.h6">Selected Seats:</MudText>
+            
+            @foreach (var seat in selectedSeats)
+            {
+                <MudPaper Elevation="1" Class="pa-3 mb-2">
+                    <MudGrid>
+                        <MudItem xs="4">
+                            <MudText Typo="Typo.body1">
+                                <strong>Row @seat.Row, Seat @seat.Number</strong>
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudSelect T="TicketType"
+                                        Label="Ticket Type"
+                                        Variant="Variant.Outlined"
+                                        @bind-Value="seatTicketTypes[seat.Id]"
+                                        Dense="true">
+                                @foreach (TicketType type in Enum.GetValues(typeof(TicketType)))
+                                {
+                                    <MudSelectItem Value="@type">@type</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="2">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                            Color="Color.Error"
+                                            OnClick="@(() => ToggleSeat(seat))" />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            }
+            
+            <MudButton 
+                Variant="Variant.Filled" 
+                Color="Color.Primary" 
+                Class="mt-4"
+                OnClick="ContinueToTicketSelection">
+                Continue (@selectedSeats.Count seats)
+            </MudButton>
+        </MudPaper>
+    }
+
+}
+
+@code {
+    [Parameter]
+    public EventCallback OnStateChanged { get; set; }
+
+    private CinemaHall? selectedHall;
+    private ReservationState reservationState = new ReservationState();
+    private bool isLoaded = false;
+
+    private Dictionary<int, TicketType> seatTicketTypes = new();
+    private List<RowModel> matrixRows = new List<RowModel>();
+    private HashSet<int> reservedSeats = new HashSet<int>();
+    private List<Seat> selectedSeats = new();
+
+    private record RowModel(int RowNumber, List<Seat?> Seats);
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            reservationState = await ReservationStateService.LoadAsync();
+
+
+            selectedHall = await CinemaHallService.GetCinemaHallByEventIdAsync(reservationState.EventId);
+
+            reservedSeats = await SeatService.GetOccupiedSeatIdsAsync(reservationState.EventId);
+            BuildMatrix();
+
+            isLoaded = true;
+            StateHasChanged();
+        }
+
+    }
+
+    private void ToggleSeat(Seat seat)
+    {
+        if (selectedSeats.Contains(seat)) {
+            selectedSeats.Remove(seat);
+            seatTicketTypes.Remove(seat.Id);
+        }
+        else 
+        {
+            selectedSeats.Add(seat);
+            seatTicketTypes[seat.Id] = TicketType.Standard;
+        }
+    }
+
+    private Color GetSeatColor(Seat seat, bool isOccupied, bool isSelected)
+    {
+        if (isSelected) return Color.Success;
+        return Color.Primary;
+    }
+
+    private bool AllSeatsHaveTicketType()
+    {
+        return selectedSeats.All(seat => seatTicketTypes.ContainsKey(seat.Id));
+    }
+
+    private async Task ContinueToTicketSelection()
+    {
+        var tickets = new List<Ticket>();
+
+        foreach (var seat in selectedSeats)
+        {
+            var ticketType = seatTicketTypes[seat.Id];
+            
+            
+            var ticket = ReservationFacade.CreateTicket(this.reservationState.EventId, seat.Id, ticketType);
+            tickets.Add(ticket);
+        }
+
+        var reservationState = new ReservationState
+        {
+            EventId = this.reservationState.EventId,
+            CustomerId = this.reservationState.CustomerId,
+            Tickets = tickets,
+            CurrentStep = ReservationStep.Catering
+        };
+
+        var command = new UpdateReservationStateCommand(ProtectedSessionStorage, reservationState);
+        await ReservationStateAsyncInvoker.ExecuteCommand(command);
+        this.reservationState = reservationState;
+		StateHasChanged();
+        await OnStateChanged.InvokeAsync();
+    }
+
+    private async Task<bool> IsSeatOccupied(Seat seat)
+    {
+        return await SeatService.IsSeatOccupiedAsync(seat.Id, reservationState.EventId);
+    }
+
+    private bool IsSeatSelected(Seat seat)
+    {
+        return reservedSeats.Contains(seat.Id);
+	}
+
+    private void BuildMatrix()
+    {
+        matrixRows.Clear();
+
+        if (selectedHall == null)
+            return;
+
+        var seats = selectedHall.Seats.ToList();
+
+        for (int row = 1; row <= selectedHall.TotalRows; row++)
+        {
+            var rowSeats = new List<Seat?>();
+            for (int number = 1; number <= selectedHall.SeatsPerRow; number++)
+            {
+                var seat = seats.FirstOrDefault(s => s.Row == row && s.Number == number);
+                rowSeats.Add(seat);
+            }
+
+            matrixRows.Add(new RowModel(row, rowSeats));
+        }
+    }
+    
+}
