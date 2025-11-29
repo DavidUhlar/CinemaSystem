@@ -10,10 +10,17 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddMudServices();
+builder.Services.AddHttpContextAccessor();
 
 // scoped for a user session
 builder.Services.AddScoped<CinemaSystem.Services.CounterState>();
 builder.Services.AddScoped<CinemaSystem.Services.DesignPatterns.Facade.ReservationFacade>();
+builder.Services.AddScoped<CinemaSystem.Services.EventService>();
+builder.Services.AddScoped<CinemaSystem.Services.CustomerService>();
+builder.Services.AddScoped<CinemaSystem.Services.CinemaHallService>();
+builder.Services.AddScoped<CinemaSystem.Services.SeatService>();
+builder.Services.AddScoped<CinemaSystem.Services.ReservationStateService>(); 
+builder.Services.AddScoped<CinemaSystem.Services.DesignPatterns.Command.ReservationStateAsyncInvoker>();
 
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseSqlite("Data Source=cinema.db"));

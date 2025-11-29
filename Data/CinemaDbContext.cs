@@ -114,6 +114,42 @@ namespace CinemaSystem.Data
 
             var catering = GenerateCatering();
             modelBuilder.Entity<CateringItem>().HasData(catering);
+
+            var reservations = new List<Reservation>
+            {
+                new Reservation
+                {
+                    Id = 1,
+                    ReservationCode = "DUMMY-1",
+                    CreatedAt = DateTime.Now,
+                    Status = ReservationStatus.Pending,
+                    Type = ReservationType.Standard,
+                    Purpose = ReservationPurpose.None,
+                    ReservationNote = "Seeded dummy reservation",
+                    TotalPrice = 10.00m,
+                    CustomerId = 1
+                }
+            };
+            modelBuilder.Entity<Reservation>().HasData(reservations);
+
+            var tickets = new List<Ticket>
+            {
+                new Ticket
+                {
+                    Id = 1,
+                    Price = 10.00m,
+                    Type = TicketType.Standard,
+                    EventId = 1,
+                    ReservationId = 1,
+                    SeatId = 1,
+                    FoodItemId = null,
+                    DrinkItemId = null,
+                    TotalPrice = 10.00m,
+                    TotalDescription = "Standard ticket (seed)"
+                }
+            };
+            modelBuilder.Entity<Ticket>().HasData(tickets);
+
         }
 
         private List<Seat> GenerateSeatsForHalls(List<CinemaHall> halls)

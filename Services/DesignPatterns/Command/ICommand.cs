@@ -5,4 +5,9 @@
         void Execute();
         void Undo();
     }
+
+    public interface ICommandAsync
+    {
+        Task Execute();
+    }
 }

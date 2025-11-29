@@ -1,0 +1,83 @@
+﻿@page "/reservation"
+
+@inject ReservationStateService ReservationStateService
+@inject ProtectedSessionStorage ProtectedSessionStore
+@inject ReservationStateAsyncInvoker ReservationStateAsyncInvoker
+@inject CustomerService CustomerService
+@inject NavigationManager NavigationManager
+@inject ProtectedSessionStorage ProtectedSessionStorage
+
+
+<PageTitle>Reservation</PageTitle>
+<h3>Reservation</h3>
+@if (!isLoaded)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <MudText>Event ID: @(reservationState.EventId != 0 ? reservationState.EventId.ToString() : "No EventId")</MudText>
+    <MudText>Customer ID: @(reservationState.CustomerId != 0 ? reservationState.CustomerId.ToString() : "No CustomerId")</MudText>
+    <MudText>Reservation: @(reservationState.CurrentStep != null ? reservationState.CurrentStep.ToString() : "No ReservationStep")</MudText>
+    <MudText>Tickets: @(reservationState.Tickets.Count != 0 ? reservationState.Tickets.Count() : "No Tickets")</MudText>
+    <MudText>Tickets: @(reservationState.Tickets.Count != 0 ? reservationState.Tickets.ElementAt(0).Type : "No Tickets")</MudText>
+    <MudText>Tickets: @(reservationState.Tickets.Count != 0 ? reservationState.Tickets.ElementAt(0).Price : "No Tickets")</MudText>
+
+    <MudButton OnClick="CancelReservation" Variant="Variant.Filled" Color="Color.Error" Class="mt-4">
+        <MudIcon Icon="@Icons.Material.Filled.Warning" />
+        <MudText Class="ml-2">Rob Daco</MudText>
+	</MudButton>
+    <MudButton OnClick="UndoReservation" Variant="Variant.Filled" Color="Color.Warning" Class="mt-4">
+        <MudIcon Icon="@Icons.Material.Filled.Wallpaper" />
+        <MudText Class="ml-2">Rob undo</MudText>
+    </MudButton>
+
+    @switch (reservationState.CurrentStep)
+    {
+        case ReservationStep.SeatSelection:
+            <SeatSelection OnStateChanged="HandleStateChanged"></SeatSelection>
+			break;
+    }
+    
+}
+
+@code {
+    private ReservationState reservationState = new ReservationState();
+    private bool isLoaded = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ReservationStateAsyncInvoker.InitializeAsync();
+            reservationState = await ReservationStateService.LoadAsync();
+            isLoaded = true;
+            StateHasChanged();
+        }
+
+    }
+
+    protected async Task CancelReservation()
+    {
+        await CustomerService.DeleteCustomerAsync(reservationState.CustomerId);
+
+        await ReservationStateService.ClearAsync();
+        reservationState = await ReservationStateService.LoadAsync();
+        // NavigationManager.NavigateTo("/events");
+        StateHasChanged();
+    }
+
+    protected async Task UndoReservation()
+    {
+        await ReservationStateAsyncInvoker.Undo();
+        StateHasChanged();
+        HandleStateChanged();
+    }
+
+    private async Task HandleStateChanged()
+    {
+        // Znovu načítaj stav zo storage
+        reservationState = await ReservationStateService.LoadAsync();
+        StateHasChanged();
+    }
+}

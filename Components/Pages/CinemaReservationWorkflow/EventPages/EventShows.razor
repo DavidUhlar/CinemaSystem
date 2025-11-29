@@ -1,8 +1,13 @@
 @page "/events"
-@using CinemaSystem.Models
-@using Microsoft.EntityFrameworkCore
-@inject CinemaSystem.Data.CinemaDbContext Db
+@using static CinemaSystem.Components.Pages.CinemaReservationWorkflow.EventPages.EventReservationStartDialog
+@inject EventService EventService
+@inject CustomerService CustomerService
 @inject IDialogService DialogService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject ReservationStateService ReservationStateService
+@inject ProtectedSessionStorage ProtectedSessionStore
+@inject ReservationStateAsyncInvoker ReservationStateAsyncInvoker
+@inject NavigationManager NavigationManager
 
 <PageTitle>Events</PageTitle>
 
@@ -39,21 +44,75 @@ else
             </MudTd>
         </RowTemplate>
     </MudTable>
+    
+	@reservationState?.ToString()
+    <br />
+    @(reservationState?.EventId != 0 ? reservationState.EventId.ToString() : "No EventId")
+    <br />
+    @(reservationState?.CustomerId != 0 ? reservationState.CustomerId.ToString() : "No CustomerId")
+    <br />
+    @(reservationState?.Tickets != null ? reservationState.Tickets.Count : "No tickets")
+    <br />
 }
 
 @code {
     private List<Event>? events;
+    private ReservationState reservationState = new ReservationState();
+    private bool isLoaded = false;
 
     protected override async Task OnInitializedAsync()
     {
-        events = await Db.Events.Include(e => e.CinemaHall).ToListAsync();
+        events = await EventService.GetAllEventsAsync();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ReservationStateAsyncInvoker.InitializeAsync();
+			reservationState = await ReservationStateService.LoadAsync();
+            isLoaded = true;
+            StateHasChanged();
+        }
     }
 
-    private Task OpenDialogAsync(Event eventItem)
+    private async Task OpenDialogAsync(Event eventItem)
     {
         var parameters = new DialogParameters { ["Event"] = eventItem };
         var options = new DialogOptions { CloseOnEscapeKey = true };
 
-        return DialogService.ShowAsync<EventReservationStartDialog>("Simple Dialog", parameters, options);
+        var dialog = await DialogService.ShowAsync<EventReservationStartDialog>("Create user", parameters, options);
+
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && result.Data is ReservationCreationResult r)
+        {
+            var firstName = r.FirstName;
+            var lastName = r.LastName;
+            var email = r.Email;
+            var returnedEvent = r.Event;
+
+            var customer = new Customer
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email
+            };
+            customer = await CustomerService.CreateCustomerAsync(customer);
+            if (returnedEvent != null && customer != null)
+            {
+                var reservationState = new ReservationState
+                {
+                    CustomerId = customer.Id,
+                    EventId = returnedEvent.Id,
+                    CurrentStep = ReservationStep.SeatSelection
+                };
+
+                var command = new UpdateReservationStateCommand(ProtectedSessionStore, reservationState);
+                await ReservationStateAsyncInvoker.ExecuteCommand(command);
+				this.reservationState = reservationState;
+
+                NavigationManager.NavigateTo("/reservation");
+            }
+        }
     }
 }
