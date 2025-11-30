@@ -1,0 +1,181 @@
+﻿@inject ReservationStateService ReservationStateService
+@inject CateringService CateringService
+@inject ReservationFacade ReservationFacade
+@inject ReservationStateAsyncInvoker ReservationStateAsyncInvoker
+@inject ProtectedSessionStorage ProtectedSessionStorage
+@inject SeatService SeatService
+
+<h3>CateringSelection</h3>
+
+<MudPaper Class="pa-4 mt-4" >
+    <MudText Typo="Typo.h6">Add Catering to Tickets:</MudText>
+
+    @foreach (var ticket in previewTickets)
+    {
+        <MudText>Row: @GetSeatBySeatId(ticket.SeatId).Result.Row , Number: @GetSeatBySeatId(ticket.SeatId).Result.Number</MudText>
+        <MudPaper Elevation="1" Class="pa-3 mb-3">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary">
+                        Ticket: @ticket.Type
+                    </MudText>
+                    <MudDivider Class="my-2" />
+                    <MudText Typo="Typo.body2">
+                        Base Price: @ticket.Price.ToString("C")
+                    </MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Success">
+                        Total Price: @ticket.TotalPrice.ToString("C")
+                    </MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        @ticket.TotalDescription
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText Typo="Typo.subtitle2">Food</MudText>
+                    <MudRadioGroup T="int?"
+                                   Value="@GetSelectedFood(ticket.SeatId)"
+                                   ValueChanged="@(v => OnFoodChanged(ticket.SeatId, v))">
+                        <MudRadio T="int?" Value="@((int?)null)">No food</MudRadio>
+                        @foreach (var food in foodItems)
+                        {
+                            <MudRadio T="int?" Value="@food.Id">
+                                @food.Type - @food.Size (@food.Price.ToString("C"))
+                            </MudRadio>
+                        }
+                    </MudRadioGroup>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText Typo="Typo.subtitle2">Drinks</MudText>
+                    <MudRadioGroup T="int?"
+                                   Value="@GetSelectedDrink(ticket.SeatId)"
+                                   ValueChanged="@(v => OnDrinkChanged(ticket.SeatId, v))">
+                        <MudRadio T="int?" Value="@((int?)null)">No drink</MudRadio>
+                        @foreach (var drink in drinkItems)
+                        {
+                            <MudRadio T="int?" Value="@drink.Id">
+                                @drink.Type - @drink.Size (@drink.Price.ToString("C"))
+                            </MudRadio>
+                        }
+                    </MudRadioGroup>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    }
+    
+    
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               Class="mt-4"
+               OnClick="ConfirmCateringAndContinue">
+        Confirm & Continue
+    </MudButton>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public EventCallback OnStateChanged { get; set; }
+
+    public Dictionary<int, int?> selectedFoodByTicket { get; set; } = new();
+    public Dictionary<int, int?> selectedDrinkByTicket { get; set; } = new();
+
+    private List<CateringItem> foodItems = new();
+    private List<CateringItem> drinkItems = new();
+
+    private List<Ticket> previewTickets = new();
+
+    private ReservationState reservationState = new ReservationState();
+    private bool isLoaded = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            reservationState = await ReservationStateService.LoadAsync();
+
+            foodItems = await CateringService.GetAllCateringFoodAsync();
+            drinkItems = await CateringService.GetAllCateringDrinksAsync();
+
+            previewTickets = reservationState.Tickets
+                .Select(t => CloneTicket(t))
+                .ToList();
+
+            foreach (var ticket in previewTickets)
+            {
+                selectedFoodByTicket[ticket.SeatId] = ticket.FoodItemId;
+                selectedDrinkByTicket[ticket.SeatId] = ticket.DrinkItemId;
+                UpdateTicketPreview(ticket.SeatId);
+            }
+
+            isLoaded = true;
+            StateHasChanged();
+        }
+
+    }
+    private int? GetSelectedFood(int seatId) =>
+        selectedFoodByTicket.GetValueOrDefault(seatId);
+
+    private int? GetSelectedDrink(int seatId) =>
+        selectedDrinkByTicket.GetValueOrDefault(seatId);
+
+    private void OnFoodChanged(int seatId, int? foodId)
+    {
+        selectedFoodByTicket[seatId] = foodId;
+        UpdateTicketPreview(seatId);
+        StateHasChanged();
+    }
+
+    private void OnDrinkChanged(int seatId, int? drinkId)
+    {
+        selectedDrinkByTicket[seatId] = drinkId;
+        UpdateTicketPreview(seatId);
+        StateHasChanged();
+    }
+
+    private void UpdateTicketPreview(int seatId)
+    {
+        var ticket = previewTickets.First(t => t.SeatId == seatId);
+        var foodId = selectedFoodByTicket.GetValueOrDefault(seatId);
+        var drinkId = selectedDrinkByTicket.GetValueOrDefault(seatId);
+
+        ticket.FoodItemId = null;
+        ticket.DrinkItemId = null;
+        ticket.TotalPrice = ticket.Price;
+        ticket.TotalDescription = string.Empty;
+
+        ReservationFacade.ApplyCateringToTicket(ticket, foodId, drinkId);
+    }
+
+    private async Task ConfirmCateringAndContinue()
+    {
+        var newState = new ReservationState
+        {
+            EventId = reservationState.EventId,
+            CustomerId = reservationState.CustomerId,
+            Tickets = previewTickets,
+            CurrentStep = ReservationStep.Summary
+        };
+
+        var command = new UpdateReservationStateCommand(ProtectedSessionStorage, newState);
+        await ReservationStateAsyncInvoker.ExecuteCommand(command);
+        this.reservationState = newState;
+        StateHasChanged();
+        await OnStateChanged.InvokeAsync();
+    }
+
+    private Ticket CloneTicket(Ticket original)
+    {
+        var ticket = ReservationFacade.CreateTicket(original.EventId, original.SeatId, original.Type);
+        ticket.FoodItemId = original.FoodItemId;
+        ticket.DrinkItemId = original.DrinkItemId;
+		return ticket;
+    }
+
+    private async Task<Seat> GetSeatBySeatId(int seatId)
+    {
+        return await SeatService.GetSeatByIdAsync(seatId);
+
+	}
+}

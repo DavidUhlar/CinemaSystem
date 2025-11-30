@@ -7,4 +7,16 @@
         public List<Ticket> Tickets { get; set; } = new List<Ticket>();
         public ReservationStep CurrentStep { get; set; } = ReservationStep.CustomerCreated;
     }
+
+    public class TicketDto
+    {
+        public int SeatId { get; set; }
+        public TicketType Type { get; set; }
+        public decimal Price { get; set; }
+        public int EventId { get; set; }
+        public int? FoodItemId { get; set; }
+        public int? DrinkItemId { get; set; }
+        public decimal TotalPrice { get; set; }
+        public string TotalDescription { get; set; } = "";
+    }
 }

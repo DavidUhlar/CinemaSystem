@@ -59,6 +59,7 @@ namespace CinemaSystem.Services.DesignPatterns.Facade
             ticket.TotalPrice = componentDecorator.GetTotalPrice();
             ticket.TotalDescription = componentDecorator.GetDescription();
         }
+
         public Reservation CreateReservation(int customerId, List<Ticket> tickets, ReservationPurpose? reservationPurpose, string? note = null)
         {
             Customer customer = cinemaDb.Customers.Find(customerId)!;

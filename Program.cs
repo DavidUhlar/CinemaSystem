@@ -19,6 +19,7 @@ builder.Services.AddScoped<CinemaSystem.Services.DesignPatterns.Facade.Reservati
 builder.Services.AddScoped<CinemaSystem.Services.EventService>();
 builder.Services.AddScoped<CinemaSystem.Services.CustomerService>();
 builder.Services.AddScoped<CinemaSystem.Services.CinemaHallService>();
+builder.Services.AddScoped<CinemaSystem.Services.CateringService>();
 builder.Services.AddScoped<CinemaSystem.Services.SeatService>();
 builder.Services.AddScoped<ReservationInvoker>();
 builder.Services.AddScoped<CinemaSystem.Services.ReservationStateService>(); 
