@@ -1,5 +1,6 @@
 using CinemaSystem.Components;
 using CinemaSystem.Data;
+using CinemaSystem.Services.DesignPatterns.Command;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 
@@ -19,8 +20,9 @@ builder.Services.AddScoped<CinemaSystem.Services.EventService>();
 builder.Services.AddScoped<CinemaSystem.Services.CustomerService>();
 builder.Services.AddScoped<CinemaSystem.Services.CinemaHallService>();
 builder.Services.AddScoped<CinemaSystem.Services.SeatService>();
+builder.Services.AddScoped<ReservationInvoker>();
 builder.Services.AddScoped<CinemaSystem.Services.ReservationStateService>(); 
-builder.Services.AddScoped<CinemaSystem.Services.DesignPatterns.Command.ReservationStateAsyncInvoker>();
+builder.Services.AddScoped<ReservationStateAsyncInvoker>();
 
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseSqlite("Data Source=cinema.db"));

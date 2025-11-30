@@ -7,7 +7,6 @@ namespace CinemaSystem.Services
     {
         private readonly ProtectedSessionStorage storage;
         private const string storageKey = "ReservationState";
-        private const string storageKeyHistory = "ReservationHistory";
 
         public ReservationStateService(ProtectedSessionStorage storage)
         {

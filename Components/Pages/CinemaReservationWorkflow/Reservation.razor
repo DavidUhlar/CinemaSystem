@@ -27,7 +27,7 @@ else
         <MudIcon Icon="@Icons.Material.Filled.Warning" />
         <MudText Class="ml-2">Rob Daco</MudText>
 	</MudButton>
-    <MudButton OnClick="UndoReservation" Variant="Variant.Filled" Color="Color.Warning" Class="mt-4">
+    <MudButton OnClick="UndoReservationStep" Variant="Variant.Filled" Color="Color.Warning" Class="mt-4">
         <MudIcon Icon="@Icons.Material.Filled.Wallpaper" />
         <MudText Class="ml-2">Rob undo</MudText>
     </MudButton>
@@ -67,7 +67,7 @@ else
         StateHasChanged();
     }
 
-    protected async Task UndoReservation()
+    protected async Task UndoReservationStep()
     {
         await ReservationStateAsyncInvoker.Undo();
         StateHasChanged();
