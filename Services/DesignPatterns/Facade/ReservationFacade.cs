@@ -13,10 +13,12 @@ namespace CinemaSystem.Services.DesignPatterns.Facade
     {
         private readonly CinemaDbContext cinemaDb;
         private readonly FactorySingleton factorySingleton;
-        public ReservationFacade(CinemaDbContext cinemaDbContext) 
+        private readonly ReservationInvoker reservationInvoker;
+        public ReservationFacade(CinemaDbContext cinemaDbContext, ReservationInvoker reservationInvoker) 
         {
             cinemaDb = cinemaDbContext;
             factorySingleton = FactorySingleton.GetInstance();
+            this.reservationInvoker = reservationInvoker;
         }
 
         public Ticket CreateTicket(int eventId, int seatId, TicketType ticketType)
@@ -78,18 +80,21 @@ namespace CinemaSystem.Services.DesignPatterns.Facade
                 reservation = director.CreateStandardReservation(customer, tickets, note);
             }
 
-            ReservationInvoker invoker = new ReservationInvoker();
             CreateReservationCommand command = new CreateReservationCommand(cinemaDb, reservation);
-            invoker.ExecuteCommand(command);
+            reservationInvoker.ExecuteCommand(command);
             return reservation;
             
         }
 
+        public void UndoReservation()
+        {
+            reservationInvoker.UndoCommand();
+        }
+
         public void CancelReservation(int reservationId)
         {
-            ReservationInvoker invoker = new ReservationInvoker();
             CancelReservationCommand command = new CancelReservationCommand(cinemaDb, reservationId);
-            invoker.ExecuteCommand(command);
+            reservationInvoker.ExecuteCommand(command);
         }
     }
 }

@@ -1,23 +1,51 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" />
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="@ToggleDrawer" />
+        <MudText Typo="Typo.h6">Cinema System</MudText>
+        <MudSpacer />
+        <MudToggleIconButton @bind-Toggled="@_isDarkMode"
+                             Icon="@Icons.Material.Filled.DarkMode"
+                             ToggledIcon="@Icons.Material.Filled.LightMode"
+                             Color="Color.Inherit"
+                             Title="Toggle theme" />
+    </MudAppBar>
+    
+    <MudDrawer @bind-Open="@_drawerOpen" Elevation="2">
+        <div class="d-flex align-center my-4 pl-4" style="width:100%;">
+            <MudIcon Icon="@Icons.Material.Filled.CameraIndoor"
+                     Size="Size.Large"
+                     Title="Favorite"
+                     Style="mx-auto" />
+            <MudText Typo="Typo.h6"
+                     Class="ml-2"
+                     Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 56px);">
+                Absolute cinema
+            </MudText>
         </div>
+        <MudDivider Style="flex: 0 0 auto;" />
+        <NavMenu />
+        
+    </MudDrawer>
 
-        <article class="content px-4">
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-4">
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+@code {
+    private bool _drawerOpen = true;
+    private bool _isDarkMode = true;
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}
