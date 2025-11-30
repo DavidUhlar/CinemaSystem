@@ -29,5 +29,10 @@ namespace CinemaSystem.Services
         {
             return await GetCateringItemsByTypeAsync(CateringType.Drink);
         }
+
+        public async Task<CateringItem?> GetCateringByIdAsync(int id)
+        {
+            return await db.CateringItems.FirstOrDefaultAsync(ci => ci.Id == id);
+        }
     }
 }

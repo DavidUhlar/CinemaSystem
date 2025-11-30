@@ -151,14 +151,14 @@
 
     private async Task ContinueToTicketSelection()
     {
-        var tickets = new List<Ticket>();
+        var tickets = new List<TicketDto>();
 
         foreach (var seat in selectedSeats)
         {
             var ticketType = seatTicketTypes[seat.Id];
             
             
-            var ticket = ReservationFacade.CreateTicket(this.reservationState.EventId, seat.Id, ticketType);
+            var ticket = ReservationFacade.CreateTicketDto(this.reservationState.EventId, seat.Id, ticketType);
             tickets.Add(ticket);
         }
 

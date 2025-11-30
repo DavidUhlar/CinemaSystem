@@ -4,6 +4,6 @@
     {
         decimal GetTotalPrice();
         string GetDescription();
-        Models.Ticket GetTicket();
+        Models.TicketDto GetTicket();
     }
 }

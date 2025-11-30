@@ -1,0 +1,36 @@
+﻿
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h5">Reservation created successfully!</MudText>
+        <MudText Typo="Typo.body2">Do you want to undo the reservation?</MudText>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Undo">
+            Undo
+        </MudButton>
+
+        <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="@Close">
+            Keep and save reservation
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public EventCallback OnUndo { get; set; }
+
+    private async Task Undo()
+    {
+        await OnUndo.InvokeAsync();
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Close()
+    {
+        MudDialog.Close(DialogResult.Ok(false));
+    }
+}

@@ -84,7 +84,7 @@
     private List<CateringItem> foodItems = new();
     private List<CateringItem> drinkItems = new();
 
-    private List<Ticket> previewTickets = new();
+    private List<TicketDto> previewTickets = new();
 
     private ReservationState reservationState = new ReservationState();
     private bool isLoaded = false;
@@ -99,7 +99,7 @@
             drinkItems = await CateringService.GetAllCateringDrinksAsync();
 
             previewTickets = reservationState.Tickets
-                .Select(t => CloneTicket(t))
+                .Select(t => CloneTicketDto(t))
                 .ToList();
 
             foreach (var ticket in previewTickets)
@@ -165,9 +165,9 @@
         await OnStateChanged.InvokeAsync();
     }
 
-    private Ticket CloneTicket(Ticket original)
+    private TicketDto CloneTicketDto(TicketDto original)
     {
-        var ticket = ReservationFacade.CreateTicket(original.EventId, original.SeatId, original.Type);
+        var ticket = ReservationFacade.CreateTicketDto(original.EventId, original.SeatId, original.Type);
         ticket.FoodItemId = original.FoodItemId;
         ticket.DrinkItemId = original.DrinkItemId;
 		return ticket;

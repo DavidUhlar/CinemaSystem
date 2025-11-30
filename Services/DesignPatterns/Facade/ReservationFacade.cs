@@ -36,7 +36,22 @@ namespace CinemaSystem.Services.DesignPatterns.Facade
             return ticket;
         }
 
-        public void ApplyCateringToTicket(Ticket ticket, int? foodId, int? drinkId)
+        public TicketDto CreateTicketDto(int eventId, int seatId, TicketType ticketType)
+        {
+            Event eventEntity = cinemaDb.Events.Find(eventId)!;
+            Seat seatEntity = cinemaDb.Seats.Find(seatId)!;
+
+            ITicketFactory factory = factorySingleton.GetFactory(ticketType);
+
+            TicketDto ticket = factory.CreateTicketDto(eventEntity, seatEntity);
+
+            ApplyPricingStrategy pricingStrategy = new ApplyPricingStrategy(ticketType);
+            ticket.Price = pricingStrategy.CalculateFinalPrice(eventEntity);
+
+            return ticket;
+        }
+
+        public void ApplyCateringToTicket(TicketDto ticket, int? foodId, int? drinkId)
         {
             IClientTicket componentDecorator = new ClientTicket(ticket);
 
@@ -45,7 +60,6 @@ namespace CinemaSystem.Services.DesignPatterns.Facade
                 CateringItem food = cinemaDb.CateringItems.Find(foodId.Value)!;
                 componentDecorator = new FoodDecorator(componentDecorator, food);
                 ticket.FoodItemId = foodId;
-                ticket.FoodItem = food;
             }
 
             if (drinkId.HasValue)
@@ -53,7 +67,6 @@ namespace CinemaSystem.Services.DesignPatterns.Facade
                 CateringItem drink = cinemaDb.CateringItems.Find(drinkId.Value)!;
                 componentDecorator = new DrinkDecorator(componentDecorator, drink);
                 ticket.DrinkItemId = drinkId;
-                ticket.DrinkItem = drink;
             }
 
             ticket.TotalPrice = componentDecorator.GetTotalPrice();
