@@ -1,4 +1,5 @@
 ﻿using CinemaSystem.Data;
+using CinemaSystem.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CinemaSystem.Services
@@ -10,6 +11,12 @@ namespace CinemaSystem.Services
         public SeatService(CinemaDbContext db)
         {
             this.db = db;
+        }
+
+        public async Task<Seat?> GetSeatByIdAsync(int id)
+        {
+            return await db.Seats
+                .FirstOrDefaultAsync(s => s.Id == id);
         }
 
         public async Task<bool> IsSeatOccupiedAsync(int seatId, int eventId)

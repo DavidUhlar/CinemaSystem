@@ -13,21 +13,6 @@ namespace CinemaSystem.Services
             this.db = db;
         }
 
-        public async Task<Event?> GetEventByIdAsync(int id)
-        {
-            return await db.Events
-                .Include(e => e.CinemaHall)
-                .FirstOrDefaultAsync(e => e.Id == id);
-        }
-
-        public async Task<List<Event>> GetUpcomingEventsAsync()
-        {
-            return await db.Events
-                .Include(e => e.CinemaHall)
-                .Where(e => e.StartTime > DateTime.Now)
-                .OrderBy(e => e.StartTime)
-                .ToListAsync();
-        }
 
         public async Task<Customer> CreateCustomerAsync(Customer newCustomer)
         {

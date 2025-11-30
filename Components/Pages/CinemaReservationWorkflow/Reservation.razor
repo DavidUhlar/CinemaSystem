@@ -1,12 +1,16 @@
 ﻿@page "/reservation"
 
+@inject IDialogService DialogService
 @inject ReservationStateService ReservationStateService
 @inject ProtectedSessionStorage ProtectedSessionStore
 @inject ReservationStateAsyncInvoker ReservationStateAsyncInvoker
 @inject CustomerService CustomerService
 @inject NavigationManager NavigationManager
 @inject ProtectedSessionStorage ProtectedSessionStorage
-
+@inject SeatService SeatService
+@inject ReservationFacade ReservationFacade
+@inject CateringService CateringService
+@inject ISnackbar Snackbar
 
 <PageTitle>Reservation</PageTitle>
 <h3>Reservation</h3>
@@ -22,21 +26,79 @@ else
     <MudText>Tickets: @(reservationState.Tickets.Count != 0 ? reservationState.Tickets.Count() : "No Tickets")</MudText>
     <MudText>Tickets: @(reservationState.Tickets.Count != 0 ? reservationState.Tickets.ElementAt(0).Type : "No Tickets")</MudText>
     <MudText>Tickets: @(reservationState.Tickets.Count != 0 ? reservationState.Tickets.ElementAt(0).Price : "No Tickets")</MudText>
+    <MudPaper Class="pa-4" Elevation="2">
+        <MudText Typo="Typo.h5" Class="mb-3">Reservation Summary</MudText>
 
+        <MudStack Spacing="2">
+            <MudText><strong>Event ID:</strong> @reservationState.EventId</MudText>
+            <MudText><strong>Customer ID:</strong> @reservationState.CustomerId</MudText>
+            <MudText><strong>Current Step:</strong> @reservationState.CurrentStep</MudText>
+
+            <MudDivider Class="my-3" />
+
+            <MudText Typo="Typo.h6">Tickets (@reservationState.Tickets.Count)</MudText>
+
+            @foreach (var (ticket, index) in reservationState.Tickets.Select((t, i) => (t, i + 1)))
+            {
+                <MudPaper Class="pa-3 mb-2" Outlined="true">
+                    <MudText><strong>Ticket #@index</strong> - @ticket.Type</MudText>
+                    <MudText>Seat: Row @GetSeatBySeatId(ticket.SeatId).Result.Row
+                                   Number @GetSeatBySeatId(ticket.SeatId).Result.Number | Base: @ticket.Price.ToString("C")
+                    </MudText>
+                    @if (ticket.FoodItemId.HasValue || ticket.DrinkItemId.HasValue)
+                    {
+                        <MudText Color="Color.Secondary">
+                            Description: @ticket.TotalDescription
+                        </MudText>
+                    }
+                    @if(reservationState.CurrentStep != ReservationStep.Catering) {
+                        <MudText Color="Color.Success"><strong>Total: @ticket.TotalPrice.ToString("C")</strong></MudText>
+                    }
+                </MudPaper>
+            }
+
+            <MudDivider Class="my-3" />
+            @if (reservationState.CurrentStep != ReservationStep.Summary)
+            {
+                <MudText Typo="Typo.h5" Color="Color.Primary">
+                    Grand Total: @CalculatePriceBeforeCatering().ToString("C")
+                </MudText>
+            } else
+            {
+                <MudText Typo="Typo.h5" Color="Color.Primary">
+                    Grand Total: @CalculateTotalPrice().ToString("C")
+                </MudText>
+            }
+        </MudStack>
+    </MudPaper>
     <MudButton OnClick="CancelReservation" Variant="Variant.Filled" Color="Color.Error" Class="mt-4">
         <MudIcon Icon="@Icons.Material.Filled.Warning" />
         <MudText Class="ml-2">Rob Daco</MudText>
 	</MudButton>
-    <MudButton OnClick="UndoReservationStep" Variant="Variant.Filled" Color="Color.Warning" Class="mt-4">
-        <MudIcon Icon="@Icons.Material.Filled.Wallpaper" />
+    <MudButton OnClick="UndoReservationStep" Variant="Variant.Filled" Color="Color.Warning" Class="mt-4" Disabled="@isUndoStepDisabled">
+        <MudIcon Icon="@Icons.Material.Filled.ArrowBack" />
         <MudText Class="ml-2">Rob undo</MudText>
     </MudButton>
-
+    @if (reservationState.CurrentStep == ReservationStep.Summary)
+    {
+        <MudButton OnClick="ConfirmReservation" Variant="Variant.Filled" Color="Color.Success" Class="mt-4">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+            <MudText Class="ml-2">Confirm Reservation</MudText>
+        </MudButton>
+    }
     @switch (reservationState.CurrentStep)
     {
         case ReservationStep.SeatSelection:
             <SeatSelection OnStateChanged="HandleStateChanged"></SeatSelection>
 			break;
+        case ReservationStep.Catering:
+            <CateringSelection OnStateChanged="HandleStateChanged"></CateringSelection>
+            break;
+        case ReservationStep.Summary:
+            <MudAlert Severity="Severity.Info" Class="mt-4">
+                Review your reservation and click Confirm to complete.
+            </MudAlert>
+            break;
     }
     
 }
@@ -44,6 +106,9 @@ else
 @code {
     private ReservationState reservationState = new ReservationState();
     private bool isLoaded = false;
+    private bool isUndoStepDisabled = true;
+
+    private int? lastReservationId = null;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -52,9 +117,25 @@ else
             await ReservationStateAsyncInvoker.InitializeAsync();
             reservationState = await ReservationStateService.LoadAsync();
             isLoaded = true;
+            isUndoStepDisabled = false;
             StateHasChanged();
         }
 
+    }
+
+    private async Task<Seat> GetSeatBySeatId(int seatId)
+    {
+        return await SeatService.GetSeatByIdAsync(seatId);
+    }
+
+    private decimal CalculateTotalPrice()
+    {
+        return reservationState.Tickets.Sum(t => t.TotalPrice);
+    }
+
+    private decimal CalculatePriceBeforeCatering()
+    {
+        return reservationState.Tickets.Sum(t => t.Price);
     }
 
     protected async Task CancelReservation()
@@ -63,20 +144,104 @@ else
 
         await ReservationStateService.ClearAsync();
         reservationState = await ReservationStateService.LoadAsync();
-        // NavigationManager.NavigateTo("/events");
+        await ReservationStateAsyncInvoker.Clear();
+        NavigationManager.NavigateTo("/events");
         StateHasChanged();
     }
 
     protected async Task UndoReservationStep()
     {
         await ReservationStateAsyncInvoker.Undo();
+        await HandleStateChanged();
         StateHasChanged();
-        HandleStateChanged();
+    }
+
+    private async Task ConfirmReservation()
+    {
+        try
+        {
+            isUndoStepDisabled = true;
+            var ticketsForDb = new List<Ticket>();
+
+            foreach (var ticketDto in reservationState.Tickets)
+            {
+                var ticket = ReservationFacade.CreateTicket(
+                    ticketDto.EventId,
+                    ticketDto.SeatId,
+                    ticketDto.Type);
+                ticket.DrinkItemId = ticketDto.DrinkItemId;
+                ticket.FoodItemId = ticketDto.FoodItemId;
+                ticket.Price = ticketDto.Price;
+                ticket.TotalPrice = ticketDto.TotalPrice;
+                ticket.TotalDescription = ticketDto.TotalDescription;
+                if (ticketDto.FoodItemId.HasValue)
+                {
+                    ticket.FoodItem = await CateringService.GetCateringByIdAsync(ticketDto.FoodItemId.Value);
+                }
+                if (ticketDto.DrinkItemId.HasValue)
+                {
+                    ticket.DrinkItem = await CateringService.GetCateringByIdAsync(ticketDto.DrinkItemId.Value);
+                }
+
+                ticketsForDb.Add(ticket);
+            }
+
+            var reservation = ReservationFacade.CreateReservation(
+                reservationState.CustomerId,
+                ticketsForDb,
+                reservationPurpose: null,
+                note: null);
+
+            lastReservationId = reservation.Id;
+
+            //save temp history/reservationState
+            await ReservationStateAsyncInvoker.SaveTempAsync();
+
+            //delete real history/reservationState
+            await ReservationStateAsyncInvoker.Clear();
+            await ReservationStateService.ClearAsync();
+
+            var dialog = await DialogService.ShowAsync<ConfirmReservationDialog>(
+            "Reservation Complete",
+            new DialogParameters
+            {
+                ["OnUndo"] = EventCallback.Factory.Create(this, async () =>
+                {
+                    await ReservationStateAsyncInvoker.RestoreFromTempAsync();
+                    isUndoStepDisabled = false;
+                })
+            });
+
+            var result = await dialog.Result;
+            bool undoTriggered = result.Data as bool? ?? false;
+            if (!undoTriggered)
+            {
+                await ReservationStateAsyncInvoker.ClearTempAsync();
+                NavigationManager.NavigateTo("/events");
+            }
+
+            
+            
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void UndoLastReservation()
+    {
+        if (lastReservationId.HasValue)
+        {
+            ReservationFacade.UndoReservation();
+            Snackbar.Add("Reservation undone", Severity.Info);
+            lastReservationId = null;
+            isUndoStepDisabled = false;
+        }
     }
 
     private async Task HandleStateChanged()
     {
-        // Znovu načítaj stav zo storage
         reservationState = await ReservationStateService.LoadAsync();
         StateHasChanged();
     }

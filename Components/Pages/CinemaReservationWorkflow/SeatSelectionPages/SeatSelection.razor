@@ -35,7 +35,7 @@
                         var isOccupied = IsSeatSelected(seat);
                         var isSelected = selectedSeats.Contains(seat);
 
-                        <MudButton Variant="@(isSelected? Variant.Filled: Variant.Outlined)" Color="@GetSeatColor(seat, isOccupied, isSelected)" Disabled="@isOccupied"
+                        <MudButton Variant="@(isSelected? Variant.Filled: Variant.Outlined)" Color="@GetSeatColor(seat, isSelected)" Disabled="@isOccupied"
                                    OnClick="@(() => ToggleSeat(seat))">
                             @seat.Number
                         </MudButton>
@@ -138,7 +138,7 @@
         }
     }
 
-    private Color GetSeatColor(Seat seat, bool isOccupied, bool isSelected)
+    private Color GetSeatColor(Seat seat, bool isSelected)
     {
         if (isSelected) return Color.Success;
         return Color.Primary;
@@ -151,14 +151,14 @@
 
     private async Task ContinueToTicketSelection()
     {
-        var tickets = new List<Ticket>();
+        var tickets = new List<TicketDto>();
 
         foreach (var seat in selectedSeats)
         {
             var ticketType = seatTicketTypes[seat.Id];
             
             
-            var ticket = ReservationFacade.CreateTicket(this.reservationState.EventId, seat.Id, ticketType);
+            var ticket = ReservationFacade.CreateTicketDto(this.reservationState.EventId, seat.Id, ticketType);
             tickets.Add(ticket);
         }
 

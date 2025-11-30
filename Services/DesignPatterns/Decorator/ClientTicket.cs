@@ -4,9 +4,9 @@ namespace CinemaSystem.Services.DesignPatterns.Decorator
 {
     public class ClientTicket : IClientTicket
     {
-        private readonly Ticket ticket;
+        private readonly TicketDto ticket;
 
-        public ClientTicket(Ticket ticket)
+        public ClientTicket(TicketDto ticket)
         {
             this.ticket = ticket;
         }
@@ -16,7 +16,7 @@ namespace CinemaSystem.Services.DesignPatterns.Decorator
             return $"{ticket.Type} ticket";
         }
 
-        public Ticket GetTicket()
+        public TicketDto GetTicket()
         {
             return ticket;
         }

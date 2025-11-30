@@ -12,7 +12,7 @@ namespace CinemaSystem.Services.DesignPatterns.Decorator
             this.item = item;
         }
 
-        public Ticket GetTicket()
+        public TicketDto GetTicket()
         {
             return component.GetTicket();
         }

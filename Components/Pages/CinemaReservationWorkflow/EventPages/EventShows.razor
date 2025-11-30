@@ -69,7 +69,7 @@ else
         if (firstRender)
         {
             await ReservationStateAsyncInvoker.InitializeAsync();
-			reservationState = await ReservationStateService.LoadAsync();
+            reservationState = await ReservationStateService.LoadAsync();
             isLoaded = true;
             StateHasChanged();
         }
@@ -98,6 +98,12 @@ else
                 Email = email
             };
             customer = await CustomerService.CreateCustomerAsync(customer);
+
+            await ReservationStateAsyncInvoker.Clear();
+            await ReservationStateService.ClearAsync();
+            await ReservationStateAsyncInvoker.ClearTempAsync();
+            Console.WriteLine("Cleared main history, main state and temp before starting new reservation.");
+
             if (returnedEvent != null && customer != null)
             {
                 var reservationState = new ReservationState

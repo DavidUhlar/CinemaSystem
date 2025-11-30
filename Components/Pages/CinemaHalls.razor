@@ -66,9 +66,23 @@ else
             </tbody>
         </table>
     }
+    @foreach(var res in reservations)
+    {
+        <div>
+            <h3>Reservation ID: @res.Id</h3>
+            <h3>Reservation ID: @res.ReservationCode</h3>
+            <ul>
+                @foreach(var ticket in res.Tickets) {
+                    <li>Ticket ID: @ticket.Id - Seat ID: @ticket.SeatId</li>
+                }
+            </ul>
+        </div>
+	}
+    }
 }
 @code {
     private List<CinemaSystem.Models.CinemaHall>? halls;
+    private List<CinemaSystem.Models.Reservation>? reservations;
 
     protected override async Task OnInitializedAsync()
     {
@@ -76,6 +90,11 @@ else
             .Include(h => h.Seats)
             .OrderBy(h => h.Id)
             .ToListAsync();
+
+        reservations = await Db.Reservations
+        .Include(h => h.Tickets)
+        .OrderBy(h => h.Id)
+        .ToListAsync();
     }
 
     private List<Seat> getSeats() {

@@ -12,7 +12,21 @@ namespace CinemaSystem.Services.DesignPatterns.Factory
                 EventId = eventShow.Id,
                 SeatId = seat.Id,
                 Price = eventShow.BasePrice,
-                Type = TicketType.Student
+                Type = TicketType.Student,
+                Event = eventShow,
+                Seat = seat
+            };
+        }
+
+        public TicketDto CreateTicketDto(Event eventShow, Seat seat)
+        {
+            return new TicketDto
+            {
+                EventId = eventShow.Id,
+                SeatId = seat.Id,
+                Price = eventShow.BasePrice,
+                Type = TicketType.Student,
+                TotalPrice = eventShow.BasePrice,
             };
         }
     }

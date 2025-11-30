@@ -5,5 +5,6 @@ namespace CinemaSystem.Services.DesignPatterns.Factory
     public interface ITicketFactory
     {
         Ticket CreateTicket(Event eventShow, Seat seat);
+        TicketDto CreateTicketDto(Event eventShow, Seat seat);
     }
 }
