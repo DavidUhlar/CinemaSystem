@@ -8,15 +8,8 @@ namespace CinemaSystem.Services.DesignPatterns.Strategy.Time
 
         public decimal CalculatePrice(decimal basePrice, Event eventShow)
         {
-            if (eventShow.Type == EventType.Film && eventShow.StartTime.DayOfWeek == DayOfWeek.Monday)
-            {
-                var priceResult = basePrice - FilmShowDiscount;
-                return priceResult <= 0 ? basePrice : priceResult;
-            }
-            else
-            {
-                return basePrice;
-            }
+            var priceResult = basePrice - FilmShowDiscount;
+            return priceResult <= 0 ? basePrice : priceResult;
         }
     }
 }

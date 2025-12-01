@@ -73,7 +73,7 @@ else
     </MudPaper>
     <MudButton OnClick="CancelReservation" Variant="Variant.Filled" Color="Color.Error" Class="mt-4">
         <MudIcon Icon="@Icons.Material.Filled.Warning" />
-        <MudText Class="ml-2">Rob Daco</MudText>
+        <MudText Class="ml-2">Cancel reservation</MudText>
 	</MudButton>
     <MudButton OnClick="UndoReservationStep" Variant="Variant.Filled" Color="Color.Warning" Class="mt-4" Disabled="@isUndoStepDisabled">
         <MudIcon Icon="@Icons.Material.Filled.ArrowBack" />
@@ -208,7 +208,7 @@ else
                 ["OnUndo"] = EventCallback.Factory.Create(this, async () =>
                 {
                     await ReservationStateAsyncInvoker.RestoreFromTempAsync();
-                    isUndoStepDisabled = false;
+                    UndoLastReservation();
                 })
             });
 
