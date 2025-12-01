@@ -77,20 +77,17 @@ namespace CinemaSystem.Services.DesignPatterns.Facade
         {
             Customer customer = cinemaDb.Customers.Find(customerId)!;
 
-            ReservationDirector director = new ReservationDirector();
 
             Reservation reservation;
-            if (tickets.Count == 1)
+            if (tickets.Count > 5)
             {
-                reservation = director.CreateStandardReservationOneTicket(customer, tickets[0], note);
-            }
-            else if (tickets.Count > 5)
-            {
+                ReservationDirector director = DirectorCreator.CreateGroupDirector();
                 var reservationPurposeTemp = reservationPurpose ?? ReservationPurpose.None;
                 reservation = director.CreateGroupReservation(customer, tickets, reservationPurposeTemp, note);
             }
             else
             {
+                ReservationDirector director = DirectorCreator.CreateStandardDirector();
                 reservation = director.CreateStandardReservation(customer, tickets, note);
             }
 

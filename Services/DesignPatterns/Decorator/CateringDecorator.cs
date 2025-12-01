@@ -12,9 +12,9 @@ namespace CinemaSystem.Services.DesignPatterns.Decorator
             this.item = item;
         }
 
-        public TicketDto GetTicket()
+        public TicketType GetTicketType()
         {
-            return component.GetTicket();
+            return component.GetTicketType();
         }
 
         public abstract decimal GetTotalPrice();

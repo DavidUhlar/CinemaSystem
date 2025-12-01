@@ -16,9 +16,9 @@ namespace CinemaSystem.Services.DesignPatterns.Decorator
             return $"{ticket.Type} ticket";
         }
 
-        public TicketDto GetTicket()
+        public TicketType GetTicketType()
         {
-            return ticket;
+            return ticket.Type;
         }
 
         public decimal GetTotalPrice()

@@ -13,10 +13,10 @@ namespace CinemaSystem.Services.DesignPatterns.Decorator
 
         public override string GetDescription()
         {
-            var ticket = component.GetTicket();
+            var ticketType = component.GetTicketType();
             string description = component.GetDescription() + $" + {item.Size} {item.Type}";
 
-            if (ticket.Type == TicketType.VIP)
+            if (ticketType == TicketType.VIP)
             {
                 switch (item.Size)
                 {
@@ -42,9 +42,9 @@ namespace CinemaSystem.Services.DesignPatterns.Decorator
             decimal basePrice = component.GetTotalPrice();
             decimal foodPrice = item.Price;
 
-            var ticket = component.GetTicket();
+            var ticketType = component.GetTicketType();
 
-            if (ticket.Type == TicketType.VIP)
+            if (ticketType == TicketType.VIP)
             {
                 switch(item.Size)
                 {

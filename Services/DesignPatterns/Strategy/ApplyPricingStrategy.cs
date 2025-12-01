@@ -1,4 +1,5 @@
-﻿using CinemaSystem.Models;
+﻿using CinemaSystem.Components.Pages.CinemaReservationWorkflow.EventPages;
+using CinemaSystem.Models;
 using CinemaSystem.Services.DesignPatterns.Strategy.Time;
 using CinemaSystem.Services.DesignPatterns.Strategy.Type;
 
@@ -6,31 +7,61 @@ namespace CinemaSystem.Services.DesignPatterns.Strategy
 {
     public class ApplyPricingStrategy
     {
-
-        private List<IPricingStrategy> strategies = new List<IPricingStrategy>();
         private IPricingStrategy strategyType;
         public ApplyPricingStrategy(TicketType ticketType)
         {
-            strategies.Add(new MondayFilmPricingStrategy());
-            strategies.Add(new WeekendFilmPricingStrategy());
-            strategies.Add(new EarlyConcertPricingStrategy());
-            strategyType = getPricingStrategyType(ticketType);
+            strategyType = GetPricingStrategyType(ticketType);
         }
 
         public decimal CalculateFinalPrice(Event eventItem)
         {
             var currentPrice = eventItem.BasePrice;
 
-            foreach (var strategy in strategies)
-            {
-                currentPrice = strategy.CalculatePrice(currentPrice, eventItem);
-            }
+            currentPrice = CalculatePricingStrategyTime(eventItem, currentPrice);
             currentPrice = strategyType.CalculatePrice(currentPrice, eventItem);
 
             return currentPrice;
         }
 
-        private IPricingStrategy getPricingStrategyType(TicketType ticketType)
+        private decimal CalculatePricingStrategyTime(Event eventItem, decimal currentPrice)
+        {
+            switch (eventItem.Type)
+            {
+                case EventType.Film:
+                    if (eventItem.StartTime.DayOfWeek == DayOfWeek.Monday)
+                    {
+                        var mondayStrategy = new MondayFilmPricingStrategy();
+                        currentPrice = mondayStrategy.CalculatePrice(currentPrice, eventItem);
+                    } 
+                    else if (IsWeekend(eventItem.StartTime.DayOfWeek))
+                    {
+                        var weekendStrategy = new WeekendFilmPricingStrategy();
+                        currentPrice = weekendStrategy.CalculatePrice(currentPrice, eventItem);
+                    }
+                    break;
+                case EventType.Concert:
+                    if (IsEarly(eventItem.StartTime))
+                    {
+                        var earlyStrategy = new EarlyConcertPricingStrategy();
+                        currentPrice = earlyStrategy.CalculatePrice(currentPrice, eventItem);
+                    }
+                    break;
+            }
+            
+            return currentPrice;
+        }
+        private bool IsWeekend(DayOfWeek dayOfWeek)
+        {
+            return dayOfWeek == DayOfWeek.Saturday || dayOfWeek == DayOfWeek.Sunday;
+        }
+
+        private bool IsEarly(DateTime date)
+        {
+            var daysUntilEvent = (date - DateTime.UtcNow).Days;
+            return daysUntilEvent >= 30;
+        }
+
+        private IPricingStrategy GetPricingStrategyType(TicketType ticketType)
         {
             IPricingStrategy pricingStrategy;
             switch (ticketType)
