@@ -14,7 +14,6 @@ builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();
 
 // scoped for a user session
-builder.Services.AddScoped<CinemaSystem.Services.CounterState>();
 builder.Services.AddScoped<CinemaSystem.Services.DesignPatterns.Facade.ReservationFacade>();
 builder.Services.AddScoped<CinemaSystem.Services.EventService>();
 builder.Services.AddScoped<CinemaSystem.Services.CustomerService>();
