@@ -44,15 +44,6 @@ else
             </MudTd>
         </RowTemplate>
     </MudTable>
-    
-	@reservationState?.ToString()
-    <br />
-    @(reservationState?.EventId != 0 ? reservationState.EventId.ToString() : "No EventId")
-    <br />
-    @(reservationState?.CustomerId != 0 ? reservationState.CustomerId.ToString() : "No CustomerId")
-    <br />
-    @(reservationState?.Tickets != null ? reservationState.Tickets.Count : "No tickets")
-    <br />
 }
 
 @code {

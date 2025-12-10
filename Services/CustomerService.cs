@@ -36,5 +36,11 @@ namespace CinemaSystem.Services
                 await db.SaveChangesAsync();
             }
         }
+
+        public async Task<Customer?> GetCustomerByIdAsync(int id)
+        {
+            return await db.Customers
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
     }
 }

@@ -61,8 +61,6 @@ namespace CinemaSystem.Services.DesignPatterns.Command
             }
         }
 
-        public bool CanUndo => stateHistory.Count > 1;
-
         public async Task Clear()
         {
             stateHistory.Clear();

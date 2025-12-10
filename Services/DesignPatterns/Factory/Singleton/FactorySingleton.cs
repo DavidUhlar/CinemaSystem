@@ -4,6 +4,7 @@
     {
         private static FactorySingleton? instance;
         private readonly Dictionary<TicketType, ITicketFactory> factories;
+        private static readonly object lockObject = new object();
         private FactorySingleton()
         {
             factories = new Dictionary<TicketType, ITicketFactory>
@@ -18,7 +19,13 @@
         {
             if (instance == null)
             {
-                instance = new FactorySingleton();
+                lock (lockObject)
+                {
+                    if (instance == null)
+                    {
+                        instance = new FactorySingleton();
+                    }
+                }
             }
             return instance;
         }

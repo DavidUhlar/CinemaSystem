@@ -57,12 +57,6 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
             return this;
         }
 
-        public IReservationBuilder SetTicket(Ticket ticket)
-        {
-            reservation.Tickets.Add(ticket);
-            return this;
-        }
-
         public IReservationBuilder SetTickets(List<Ticket> ticket)
         {
             foreach (var t in ticket)

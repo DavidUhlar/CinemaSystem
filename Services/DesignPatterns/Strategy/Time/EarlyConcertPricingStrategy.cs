@@ -8,20 +8,7 @@ namespace CinemaSystem.Services.DesignPatterns.Strategy.Time
 
         public decimal CalculatePrice(decimal basePrice, Event eventShow)
         {
-            if (eventShow.Type == EventType.Concert && IsEarly(eventShow.StartTime))
-            {
-                return basePrice * ConcertDiscountPrice;
-            }
-            else
-            {
-                return basePrice;
-            }
-        }
-
-        private bool IsEarly(DateTime date)
-        {
-            var daysUntilEvent = (date - DateTime.UtcNow).Days;
-            return daysUntilEvent >= 30;
+            return basePrice * ConcertDiscountPrice;
         }
     }
 }
