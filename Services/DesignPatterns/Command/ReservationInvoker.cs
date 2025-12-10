@@ -17,13 +17,5 @@
                 command.Undo();
             }
         }
-
-        public void CanUndo()
-        {
-            if (executedCommands.Count == 0)
-            {
-                throw new InvalidOperationException("No commands to undo.");
-            }
-        }
     }
 }

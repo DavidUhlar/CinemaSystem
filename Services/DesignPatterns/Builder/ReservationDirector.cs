@@ -11,25 +11,8 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
             this.builder = builder;
         }
 
-        //public Reservation CreateStandardReservationOneTicket(Customer customer, Ticket ticket, string? note = null)
-        //{
-        //    //var builder = new ReservationBuilder();
-
-        //    builder.Reset()
-        //        .SetCustomer(customer)
-        //        .SetTicket(ticket)
-        //        .SetReservationType(ReservationType.Standard);
-        //    if (!string.IsNullOrEmpty(note))
-        //    {
-        //        builder.SetReservationNote(note);
-        //    }
-        //    return builder.Build();
-        //}
-
         public Reservation CreateStandardReservation(Customer customer, List<Ticket> tickets, string? note = null)
         {
-            //var builder = new ReservationBuilder();
-
             builder.Reset()
                 .SetCustomer(customer)
                 .SetTickets(tickets)
@@ -43,8 +26,6 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
         
         public Reservation CreateGroupReservation(Customer customer, List<Ticket> tickets, ReservationPurpose purpose, string? note = null)
         {
-            //var builder = new GroupReservationBuilder();
-
             builder.Reset()
                 .SetCustomer(customer)
                 .SetTickets(tickets)
