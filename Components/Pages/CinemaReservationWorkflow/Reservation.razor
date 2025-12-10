@@ -69,23 +69,26 @@ else
             }
         </MudStack>
     </MudPaper>
-    <MudButton OnClick="CancelReservation" Variant="Variant.Filled" Color="Color.Error" Class="mt-4">
+    <MudButton OnClick="CancelReservation" Variant="Variant.Filled" Color="Color.Error" Class="mt-4 mr-2">
         <MudIcon Icon="@Icons.Material.Filled.Warning" />
         <MudText Class="ml-2">Cancel reservation</MudText>
 	</MudButton>
-    @if(reservationState.CurrentStep != ReservationStep.SeatSelection) {
-        <MudButton OnClick="UndoReservationStep" Variant="Variant.Filled" Color="Color.Warning" Class="mt-4" Disabled="@isUndoStepDisabled">
+    @if(reservationState.CurrentStep != ReservationStep.SeatSelection)
+    {
+        <MudButton OnClick="UndoReservationStep" Variant="Variant.Filled" Color="Color.Warning" Class="mt-4 mr-2" Disabled="@isUndoStepDisabled">
             <MudIcon Icon="@Icons.Material.Filled.ArrowBack" />
             <MudText Class="ml-2">Previous step</MudText>
         </MudButton>
     }
     @if (reservationState.CurrentStep == ReservationStep.Summary)
     {
-        <MudButton OnClick="ConfirmReservation" Variant="Variant.Filled" Color="Color.Success" Class="mt-4">
+        <MudButton OnClick="ConfirmReservation" Variant="Variant.Filled" Color="Color.Success" Class="mt-4 mr-2">
             <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
             <MudText Class="ml-2">Confirm Reservation</MudText>
         </MudButton>
     }
+    <MudDivider Class="my-3" />
+
     @switch (reservationState.CurrentStep)
     {
         case ReservationStep.SeatSelection:
