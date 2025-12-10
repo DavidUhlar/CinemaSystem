@@ -8,6 +8,8 @@
 @inject NavigationManager NavigationManager
 @inject ProtectedSessionStorage ProtectedSessionStorage
 @inject SeatService SeatService
+@inject EventService EventService
+@inject CustomerService CustomerService
 @inject ReservationFacade ReservationFacade
 @inject CateringService CateringService
 @inject ISnackbar Snackbar
@@ -20,54 +22,50 @@
 }
 else
 {
-    <MudText>Event ID: @(reservationState.EventId != 0 ? reservationState.EventId.ToString() : "No EventId")</MudText>
-    <MudText>Customer ID: @(reservationState.CustomerId != 0 ? reservationState.CustomerId.ToString() : "No CustomerId")</MudText>
-    <MudText>Reservation: @(reservationState.CurrentStep != null ? reservationState.CurrentStep.ToString() : "No ReservationStep")</MudText>
-    <MudText>Tickets: @(reservationState.Tickets.Count != 0 ? reservationState.Tickets.Count() : "No Tickets")</MudText>
-    <MudText>Tickets: @(reservationState.Tickets.Count != 0 ? reservationState.Tickets.ElementAt(0).Type : "No Tickets")</MudText>
-    <MudText>Tickets: @(reservationState.Tickets.Count != 0 ? reservationState.Tickets.ElementAt(0).Price : "No Tickets")</MudText>
     <MudPaper Class="pa-4" Elevation="2">
         <MudText Typo="Typo.h5" Class="mb-3">Reservation Summary</MudText>
 
         <MudStack Spacing="2">
-            <MudText><strong>Event ID:</strong> @reservationState.EventId</MudText>
-            <MudText><strong>Customer ID:</strong> @reservationState.CustomerId</MudText>
+            <MudText><strong>Event:</strong> @GetEventByEventId(reservationState.EventId).Result.Title</MudText>
+            <MudText><strong>Customer:</strong> @GetCustomerByCustomerId(reservationState.CustomerId).Result.FirstName</MudText>
             <MudText><strong>Current Step:</strong> @reservationState.CurrentStep</MudText>
 
-            <MudDivider Class="my-3" />
+            @if(reservationState.CurrentStep != ReservationStep.SeatSelection) {
+                <MudDivider Class="my-3" />
 
-            <MudText Typo="Typo.h6">Tickets (@reservationState.Tickets.Count)</MudText>
+                <MudText Typo="Typo.h6">Tickets (@reservationState.Tickets.Count)</MudText>
 
-            @foreach (var (ticket, index) in reservationState.Tickets.Select((t, i) => (t, i + 1)))
-            {
-                <MudPaper Class="pa-3 mb-2" Outlined="true">
-                    <MudText><strong>Ticket #@index</strong> - @ticket.Type</MudText>
-                    <MudText>Seat: Row @GetSeatBySeatId(ticket.SeatId).Result.Row
-                                   Number @GetSeatBySeatId(ticket.SeatId).Result.Number | Base: @ticket.Price.ToString("C")
-                    </MudText>
-                    @if (ticket.FoodItemId.HasValue || ticket.DrinkItemId.HasValue)
-                    {
-                        <MudText Color="Color.Secondary">
-                            Description: @ticket.TotalDescription
+                @foreach (var (ticket, index) in reservationState.Tickets.Select((t, i) => (t, i + 1)))
+                {
+                    <MudPaper Class="pa-3 mb-2" Outlined="true">
+                        <MudText><strong>Ticket #@index</strong> - @ticket.Type</MudText>
+                        <MudText>Seat: Row @GetSeatBySeatId(ticket.SeatId).Result.Row
+                                       Number @GetSeatBySeatId(ticket.SeatId).Result.Number | Base: @ticket.Price.ToString("C")
                         </MudText>
-                    }
-                    @if(reservationState.CurrentStep != ReservationStep.Catering) {
-                        <MudText Color="Color.Success"><strong>Total: @ticket.TotalPrice.ToString("C")</strong></MudText>
-                    }
-                </MudPaper>
-            }
+                        @if (ticket.FoodItemId.HasValue || ticket.DrinkItemId.HasValue)
+                        {
+                            <MudText Color="Color.Secondary">
+                                Description: @ticket.TotalDescription
+                            </MudText>
+                        }
+                        @if(reservationState.CurrentStep != ReservationStep.Catering) {
+                            <MudText Color="Color.Success"><strong>Total: @ticket.TotalPrice.ToString("C")</strong></MudText>
+                        }
+                    </MudPaper>
+                }
 
-            <MudDivider Class="my-3" />
-            @if (reservationState.CurrentStep != ReservationStep.Summary)
-            {
-                <MudText Typo="Typo.h5" Color="Color.Primary">
-                    Grand Total: @CalculatePriceBeforeCatering().ToString("C")
-                </MudText>
-            } else
-            {
-                <MudText Typo="Typo.h5" Color="Color.Primary">
-                    Grand Total: @CalculateTotalPrice().ToString("C")
-                </MudText>
+                <MudDivider Class="my-3" />
+                @if (reservationState.CurrentStep != ReservationStep.Summary)
+                {
+                    <MudText Typo="Typo.h5" Color="Color.Primary">
+                        Grand Total: @CalculatePriceBeforeCatering().ToString("C")
+                    </MudText>
+                } else
+                {
+                    <MudText Typo="Typo.h5" Color="Color.Primary">
+                        Grand Total: @CalculateTotalPrice().ToString("C")
+                    </MudText>
+                }
             }
         </MudStack>
     </MudPaper>
@@ -75,10 +73,12 @@ else
         <MudIcon Icon="@Icons.Material.Filled.Warning" />
         <MudText Class="ml-2">Cancel reservation</MudText>
 	</MudButton>
-    <MudButton OnClick="UndoReservationStep" Variant="Variant.Filled" Color="Color.Warning" Class="mt-4" Disabled="@isUndoStepDisabled">
-        <MudIcon Icon="@Icons.Material.Filled.ArrowBack" />
-        <MudText Class="ml-2">Rob undo</MudText>
-    </MudButton>
+    @if(reservationState.CurrentStep != ReservationStep.SeatSelection) {
+        <MudButton OnClick="UndoReservationStep" Variant="Variant.Filled" Color="Color.Warning" Class="mt-4" Disabled="@isUndoStepDisabled">
+            <MudIcon Icon="@Icons.Material.Filled.ArrowBack" />
+            <MudText Class="ml-2">Previous step</MudText>
+        </MudButton>
+    }
     @if (reservationState.CurrentStep == ReservationStep.Summary)
     {
         <MudButton OnClick="ConfirmReservation" Variant="Variant.Filled" Color="Color.Success" Class="mt-4">
@@ -128,6 +128,16 @@ else
         return await SeatService.GetSeatByIdAsync(seatId);
     }
 
+    private async Task<Event> GetEventByEventId(int eventId)
+    {
+        return await EventService.GetEventByIdAsync(eventId);
+    }
+
+    private async Task<Customer> GetCustomerByCustomerId(int customerId)
+    {
+        return await CustomerService.GetCustomerByIdAsync(customerId);
+    }
+
     private decimal CalculateTotalPrice()
     {
         return reservationState.Tickets.Sum(t => t.TotalPrice);
@@ -145,8 +155,9 @@ else
         await ReservationStateService.ClearAsync();
         reservationState = await ReservationStateService.LoadAsync();
         await ReservationStateAsyncInvoker.Clear();
-        NavigationManager.NavigateTo("/events");
         StateHasChanged();
+        NavigationManager.NavigateTo("/events");
+        
     }
 
     protected async Task UndoReservationStep()

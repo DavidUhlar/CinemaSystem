@@ -28,7 +28,7 @@ namespace CinemaSystem.Services.DesignPatterns.Strategy
             switch (eventItem.Type)
             {
                 case EventType.Film:
-                    if (eventItem.StartTime.DayOfWeek == DayOfWeek.Monday)
+                    if (IsMonday(eventItem.StartTime.DayOfWeek))
                     {
                         var mondayStrategy = new MondayFilmPricingStrategy();
                         currentPrice = mondayStrategy.CalculatePrice(currentPrice, eventItem);
@@ -49,6 +49,11 @@ namespace CinemaSystem.Services.DesignPatterns.Strategy
             }
             
             return currentPrice;
+        }
+
+        private bool IsMonday(DayOfWeek dayOfWeek)
+        {
+            return dayOfWeek == DayOfWeek.Monday;
         }
         private bool IsWeekend(DayOfWeek dayOfWeek)
         {
