@@ -1,5 +1,6 @@
 using CinemaSystem.Components;
 using CinemaSystem.Data;
+using CinemaSystem.Services;
 using CinemaSystem.Services.DesignPatterns.Command;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
@@ -15,14 +16,16 @@ builder.Services.AddHttpContextAccessor();
 
 // scoped for a user session
 builder.Services.AddScoped<CinemaSystem.Services.DesignPatterns.Facade.ReservationFacade>();
-builder.Services.AddScoped<CinemaSystem.Services.EventService>();
-builder.Services.AddScoped<CinemaSystem.Services.CustomerService>();
-builder.Services.AddScoped<CinemaSystem.Services.CinemaHallService>();
-builder.Services.AddScoped<CinemaSystem.Services.CateringService>();
-builder.Services.AddScoped<CinemaSystem.Services.SeatService>();
+builder.Services.AddScoped<EventService>();
+builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<CinemaHallService>();
+builder.Services.AddScoped<CateringService>();
+builder.Services.AddScoped<SeatService>();
 builder.Services.AddScoped<ReservationInvoker>();
-builder.Services.AddScoped<CinemaSystem.Services.ReservationStateService>(); 
+builder.Services.AddScoped<ReservationStateService>(); 
 builder.Services.AddScoped<ReservationStateAsyncInvoker>();
+
+builder.Services.AddHttpClient<TmdbService>();
 
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseSqlite("Data Source=cinema.db"));

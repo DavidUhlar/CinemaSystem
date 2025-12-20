@@ -1,7 +1,196 @@
 ﻿@page "/"
+@inject EventService EventService
+@inject TmdbService TmdbService
+@inject NavigationManager NavigationManager
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Cinema System</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (filmDetails.Any())
+    {
+        <MudCarousel Class="mud-width-full" 
+                     Style="height: 600px; border-radius: 8px; overflow: hidden;" 
+                     ShowArrows="true" 
+                     ShowBullets="true" 
+                     EnableSwipeGesture="true" 
+                     AutoCycle="true" 
+                     TData="object"
+                     AutoCycleTime="TimeSpan.FromSeconds(8)">
+            @foreach (var item in filmDetails)
+            {
+                <MudCarouselItem Transition="Transition.Slide">
+                    <div style="height: 100%; position: relative; cursor: pointer;" 
+                         @onclick="@(() => NavigateToFilm(item.Event))">
+                        
+                        @if (!string.IsNullOrEmpty(item.MovieInfo?.PosterUrl))
+                        {
+                            <div style="
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                                background-image: url('@item.MovieInfo.PosterUrl');
+                                background-size: cover;
+                                background-position: center;
+                                filter: blur(20px) brightness(0.4);
+                                transform: scale(1.1);
+                            "></div>
+                        }
+                        else
+                        {
+                            <div style="
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            "></div>
+                        }
 
-Welcome to your new app.
+                        <div style="
+                            position: relative;
+                            height: 100%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 20px;
+                        ">
+                            <MudGrid Justify="Justify.Center" Style="max-width: 1200px;">
+                                <MudItem xs="12" md="4" Class="d-flex justify-center align-center">
+                                    @if (!string.IsNullOrEmpty(item.MovieInfo?.PosterUrl))
+                                    {
+                                        <MudImage Src="@item.MovieInfo.PosterUrl" 
+                                                  Alt="@item.Event.Title"
+                                                  Elevation="10"
+                                                  Class="rounded-lg"
+                                                  Style="max-height: 500px; width: auto; object-fit: contain;" />
+                                    }
+                                    else
+                                    {
+                                        <div style="width: 300px; height: 450px; background: rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                            <MudIcon Icon="@Icons.Material.Filled.Movie" Size="Size.Large" Color="Color.Surface" Style="font-size: 100px;" />
+                                        </div>
+                                    }
+                                </MudItem>
+
+                                <MudItem xs="12" md="8" Class="d-flex align-center">
+                                    <div style="color: white; text-align: left; width: 100%;">
+                                        <MudText Typo="Typo.h3" Style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+                                            @item.Event.Title
+                                        </MudText>
+                                        
+                                        @if (item.MovieInfo?.Genres != null && item.MovieInfo.Genres.Any())
+                                        {
+                                            <div class="mt-3">
+                                                @foreach (var genre in item.MovieInfo.Genres.Take(4))
+                                                {
+                                                    <MudChip T="string" Size="Size.Medium" Color="Color.Primary" Class="mr-2">@genre</MudChip>
+                                                }
+                                            </div>
+                                        }
+
+                                        @if (item.MovieInfo != null)
+                                        {
+                                            <div class="d-flex align-center mt-3">
+                                                <MudRating ReadOnly="true" SelectedValue="@((int)(item.MovieInfo.Rating / 2))" Size="Size.Medium" Color="Color.Warning" />
+                                                <MudText Typo="Typo.h6" Class="ml-2" Style="color: white;">
+                                                    @item.MovieInfo.Rating.ToString("F1") / 10
+                                                </MudText>
+                                            </div>
+
+                                            @if (!string.IsNullOrEmpty(item.MovieInfo.Description))
+                                            {
+                                                <MudText Typo="Typo.body1" Class="mt-4" Style="color: rgba(255,255,255,0.9); line-height: 1.6;">
+                                                    @(item.MovieInfo.Description.Length > 300 
+                                                        ? item.MovieInfo.Description.Substring(0, 300) + "..." 
+                                                        : item.MovieInfo.Description)
+                                                </MudText>
+                                            }
+                                        }
+                                        
+                                        <MudDivider Class="my-4" Style="background-color: rgba(255,255,255,0.2);" />
+                                        
+                                        <MudText Typo="Typo.h6" Style="color: white;">
+                                            <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Size="Size.Small" Class="mr-2" />
+                                            @item.Event.StartTime.ToString("dddd, dd MMMM yyyy ',' HH:mm")
+                                        </MudText>
+                                        
+                                        <MudText Typo="Typo.body1" Class="mt-2" Style="color: white;">
+                                            <MudIcon Icon="@Icons.Material.Filled.Room" Size="Size.Small" Class="mr-2" />
+                                            Hall: @item.Event.CinemaHall?.Name
+                                        </MudText>
+                                        
+                                        <MudText Typo="Typo.h5" Class="mt-3" Style="color: #FFD700;">
+                                            From @item.Event.BasePrice.ToString("C")
+                                        </MudText>
+                                    </div>
+                                </MudItem>
+                            </MudGrid>
+                        </div>
+                    </div>
+                </MudCarouselItem>
+            }
+        </MudCarousel>
+
+        <MudDivider Class="my-6" />
+
+        <MudText Typo="Typo.h5" Class="mb-4">Browse All Events</MudText>
+        <MudButton Href="/events" 
+                   Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   Size="Size.Large"
+                   StartIcon="@Icons.Material.Filled.Theaters"
+                   FullWidth="true">
+            View All Events
+        </MudButton>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info">No films currently showing</MudAlert>
+    }
+</MudContainer>
+
+@code {
+    private List<FilmWithDetails> filmDetails = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var allEvents = await EventService.GetAllEventsAsync();
+        
+        var upcomingFilms = allEvents
+            .Where(e => e.Type.ToString() == "Film" && e.StartTime >= DateTime.Now.AddHours(-2))
+            .OrderBy(e => e.StartTime)
+            .Take(5)
+            .ToList();
+
+        foreach (var film in upcomingFilms)
+        {
+            var movieInfo = await TmdbService.GetMovieInfoAsync(film.Title);
+            filmDetails.Add(new FilmWithDetails
+            {
+                Event = film,
+                MovieInfo = movieInfo
+            });
+        }
+
+        isLoading = false;
+    }
+
+    private void NavigateToFilm(Event film)
+    {
+        NavigationManager.NavigateTo($"/movie/{Uri.EscapeDataString(film.Title)}");
+    }
+
+    private class FilmWithDetails
+    {
+        public Event Event { get; set; } = null!;
+        public MovieInfo? MovieInfo { get; set; }
+    }
+}

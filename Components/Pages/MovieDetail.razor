@@ -1,0 +1,105 @@
+﻿@page "/movie/{movieName}"
+@inject TmdbService TmdbService
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h3" Class="mb-4">Movie Detail</MudText>
+
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Class="mt-4" />
+    }
+    else if (movieDetail != null)
+    {
+        <MudCard Class="mt-4">
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12" sm="4" md="3">
+                        @if (!string.IsNullOrEmpty(movieDetail.PosterUrl))
+                        {
+                            <MudImage Src="@movieDetail.PosterUrl"
+                                      Alt="@movieDetail.Title"
+                                      Elevation="4"
+                                      Class="rounded-lg"
+                                      Style="width: 100%; height: auto;" />
+                        }
+                        else
+                        {
+                            <MudPaper Class="pa-4 d-flex align-center justify-center"
+                                      Style="min-height: 400px; background-color: #f5f5f5;">
+                                <MudText Color="Color.Secondary">No poster available</MudText>
+                            </MudPaper>
+                        }
+                    </MudItem>
+
+                    <MudItem xs="12" sm="8" md="9">
+                        <MudText Typo="Typo.h4" Class="mb-2">@movieDetail.Title</MudText>
+
+                        @if (!string.IsNullOrEmpty(movieDetail.OriginalTitle) && movieDetail.OriginalTitle != movieDetail.Title)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                                Original Title: @movieDetail.OriginalTitle
+                            </MudText>
+                        }
+
+                        <div class="d-flex align-center mb-3">
+                            <MudRating ReadOnly="true" SelectedValue="@((int)(movieDetail.Rating / 2))" Size="Size.Small" />
+                            <MudText Typo="Typo.body2" Class="ml-2">
+                                @movieDetail.Rating.ToString("F1") / 10
+                            </MudText>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(movieDetail.ReleaseDate))
+                        {
+                            <MudText Typo="Typo.body2" Class="mb-3">
+                                <strong>Release Date:</strong> @movieDetail.ReleaseDate
+                            </MudText>
+                        }
+
+                        @if (movieDetail.Genres != null && movieDetail.Genres.Any())
+                        {
+                            <div class="mb-3">
+                                <MudText Typo="Typo.body2" Class="mb-2"><strong>Genres:</strong></MudText>
+                                @foreach (var genre in movieDetail.Genres)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary">@genre</MudChip>
+                                }
+                            </div>
+                        }
+
+                        <MudDivider Class="my-3" />
+
+                        <MudText Typo="Typo.h6" Class="mb-2">Overview</MudText>
+                        <MudText Typo="Typo.body1">
+                            @movieDetail.Description
+                        </MudText>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string? MovieName { get; set; }
+
+    private MovieInfo? movieDetail;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(MovieName))
+        {
+            isLoading = true;
+            movieDetail = await TmdbService.GetMovieInfoAsync(MovieName);
+            isLoading = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/events");
+    }
+}
