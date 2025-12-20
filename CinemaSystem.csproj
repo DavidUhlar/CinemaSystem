@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
 	  <RootNamespace>CinemaSystem</RootNamespace>
 	  <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
+    <UserSecretsId>411ee159-cd4a-4a50-a805-71b223ac4cfa</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

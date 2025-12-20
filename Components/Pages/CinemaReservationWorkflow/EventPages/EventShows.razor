@@ -31,7 +31,20 @@ else
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Type">@context.Type</MudTd>
-            <MudTd DataLabel="Name">@context.Title</MudTd>
+            <MudTd DataLabel="Name">
+                @if (context.Type.ToString() == "Film")
+                {
+                    <MudLink Href="@($"/movie/{Uri.EscapeDataString(context.Title)}")"
+                             Typo="Typo.body2"
+                             Color="Color.Primary">
+                        @context.Title
+                    </MudLink>
+                }
+                else
+                {
+                    <MudText>@context.Title</MudText>
+                }
+            </MudTd>
             <MudTd DataLabel="Description">@context.Description</MudTd>
             <MudTd DataLabel="Hall">@context.CinemaHall?.Name</MudTd>
             <MudTd DataLabel="Start Time">@context.StartTime.ToString("g")</MudTd>
