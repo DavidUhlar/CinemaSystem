@@ -1,6 +1,8 @@
-﻿public enum EventType
+﻿namespace CinemaSystem.Models.Enums
 {
-    Film,
-    Concert
+    public enum EventType
+    {
+        Film,
+        Concert
+    }
 }
-

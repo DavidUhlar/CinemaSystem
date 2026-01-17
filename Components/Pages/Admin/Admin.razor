@@ -1,0 +1,105 @@
+﻿@page "/admin"
+@inject NavigationManager NavigationManager
+@inject ProtectedSessionStorage SessionStorage
+
+<PageTitle>Admin Dashboard</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    @if (isLoaded)
+    {
+        @if (isLoggedIn)
+        {
+            <div class="d-flex justify-space-between align-center mb-6">
+                <div>
+                    <MudText Typo="Typo.h3">Admin Dashboard</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">Welcome, @adminName</MudText>
+                </div>
+                <MudButton OnClick="HandleLogout" Variant="Variant.Outlined" Color="Color.Error">
+                    Logout
+                </MudButton>
+            </div>
+
+            <MudGrid>
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Class="pa-4">
+                        <MudCardContent>
+                            <MudIcon Icon="@Icons.Material.Filled.Movie" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
+                            <MudText Typo="Typo.h6">Add Film Screening</MudText>
+                            <MudText Typo="Typo.body2" Class="mt-2">Create new film screening</MudText>
+                            <MudButton Href="/admin/add-film" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" FullWidth="true">
+                                Add Film
+                            </MudButton>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Class="pa-4">
+                        <MudCardContent>
+                            <MudIcon Icon="@Icons.Material.Filled.MusicNote" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                            <MudText Typo="Typo.h6">Add Concert</MudText>
+                            <MudText Typo="Typo.body2" Class="mt-2">Create new concert event</MudText>
+                            <MudButton Disabled = "true" Href="/admin/add-concert" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4" FullWidth="true">
+                                Add Concert
+                            </MudButton>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Class="pa-4">
+                        <MudCardContent>
+                            <MudIcon Icon="@Icons.Material.Filled.List" Size="Size.Large" Color="Color.Tertiary" Class="mb-2" />
+                            <MudText Typo="Typo.h6">View All Events</MudText>
+                            <MudText Typo="Typo.body2" Class="mt-2">Manage existing events</MudText>
+                            <MudButton Href="/events" Variant="Variant.Filled" Color="Color.Tertiary" Class="mt-4" FullWidth="true">
+                                View Events
+                            </MudButton>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        }
+        else
+        {
+            <MudText>Redirecting to login...</MudText>
+        }
+    }
+    else
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+</MudContainer>
+
+@code {
+    private bool isLoggedIn = false;
+    private bool isLoaded = false;
+    private string adminName = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var loginResult = await SessionStorage.GetAsync<bool>("IsLoggedIn");
+            var nameResult = await SessionStorage.GetAsync<string>("AdminName");
+
+            isLoggedIn = loginResult.Success && loginResult.Value;
+            adminName = nameResult.Success ? nameResult.Value! : "";
+
+            if (!isLoggedIn)
+            {
+                NavigationManager.NavigateTo("/login");
+            }
+
+            isLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        await SessionStorage.DeleteAsync("IsLoggedIn");
+        await SessionStorage.DeleteAsync("AdminName");
+        NavigationManager.NavigateTo("/login");
+    }
+}

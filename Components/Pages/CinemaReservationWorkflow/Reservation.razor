@@ -1,5 +1,6 @@
 ﻿@page "/reservation"
 
+
 @inject IDialogService DialogService
 @inject ReservationStateService ReservationStateService
 @inject ProtectedSessionStorage ProtectedSessionStore
@@ -18,7 +19,14 @@
 <h3>Reservation</h3>
 @if (!isLoaded)
 {
-    <p><em>No active reservations</em></p>
+    <p><em>Loading...</em></p>
+}
+else if (reservationState == null || reservationState.EventId == 0 || reservationState.CustomerId == 0)
+{
+    <MudAlert Severity="Severity.Info">No active reservation. Please select an event first.</MudAlert>
+    <MudButton Href="/events" Variant="Variant.Filled" Color="Color.Primary" Class="mt-3">
+        Browse Events
+    </MudButton>
 }
 else
 {
@@ -26,29 +34,30 @@ else
         <MudText Typo="Typo.h5" Class="mb-3">Reservation Summary</MudText>
 
         <MudStack Spacing="2">
-            <MudText><strong>Event:</strong> @GetEventByEventId(reservationState.EventId).Result.Title</MudText>
-            <MudText><strong>Customer:</strong> @GetCustomerByCustomerId(reservationState.CustomerId).Result.FirstName</MudText>
+            <MudText><strong>Event:</strong> @currentEvent?.Title</MudText>
+            <MudText><strong>Customer:</strong> @currentCustomer?.FirstName</MudText>
             <MudText><strong>Current Step:</strong> @reservationState.CurrentStep</MudText>
 
-            @if(reservationState.CurrentStep != ReservationStep.SeatSelection) {
+            @if (reservationState.CurrentStep != ReservationStep.SeatSelection)
+            {
                 <MudDivider Class="my-3" />
 
                 <MudText Typo="Typo.h6">Tickets (@reservationState.Tickets.Count)</MudText>
 
                 @foreach (var (ticket, index) in reservationState.Tickets.Select((t, i) => (t, i + 1)))
                 {
+                    var seat = GetSeatFromCache(ticket.SeatId);
                     <MudPaper Class="pa-3 mb-2" Outlined="true">
                         <MudText><strong>Ticket #@index</strong> - @ticket.Type</MudText>
-                        <MudText>Seat: Row @GetSeatBySeatId(ticket.SeatId).Result.Row
-                                       Number @GetSeatBySeatId(ticket.SeatId).Result.Number | Base: @ticket.Price.ToString("C")
-                        </MudText>
+                        <MudText>Seat: Row @seat?.Row Number @seat?.Number | Base: @ticket.Price.ToString("C")</MudText>
                         @if (ticket.FoodItemId.HasValue || ticket.DrinkItemId.HasValue)
                         {
                             <MudText Color="Color.Secondary">
                                 Description: @ticket.TotalDescription
                             </MudText>
                         }
-                        @if(reservationState.CurrentStep != ReservationStep.Catering) {
+                        @if (reservationState.CurrentStep != ReservationStep.Catering)
+                        {
                             <MudText Color="Color.Success"><strong>Total: @ticket.TotalPrice.ToString("C")</strong></MudText>
                         }
                     </MudPaper>
@@ -60,7 +69,8 @@ else
                     <MudText Typo="Typo.h5" Color="Color.Primary">
                         Grand Total: @CalculatePriceBeforeCatering().ToString("C")
                     </MudText>
-                } else
+                }
+                else
                 {
                     <MudText Typo="Typo.h5" Color="Color.Primary">
                         Grand Total: @CalculateTotalPrice().ToString("C")
@@ -72,8 +82,8 @@ else
     <MudButton OnClick="CancelReservation" Variant="Variant.Filled" Color="Color.Error" Class="mt-4 mr-2">
         <MudIcon Icon="@Icons.Material.Filled.Warning" />
         <MudText Class="ml-2">Cancel reservation</MudText>
-	</MudButton>
-    @if(reservationState.CurrentStep != ReservationStep.SeatSelection)
+    </MudButton>
+    @if (reservationState.CurrentStep != ReservationStep.SeatSelection)
     {
         <MudButton OnClick="UndoReservationStep" Variant="Variant.Filled" Color="Color.Warning" Class="mt-4 mr-2" Disabled="@isUndoStepDisabled">
             <MudIcon Icon="@Icons.Material.Filled.ArrowBack" />
@@ -93,7 +103,7 @@ else
     {
         case ReservationStep.SeatSelection:
             <SeatSelection OnStateChanged="HandleStateChanged"></SeatSelection>
-			break;
+            break;
         case ReservationStep.Catering:
             <CateringSelection OnStateChanged="HandleStateChanged"></CateringSelection>
             break;
@@ -103,15 +113,17 @@ else
             </MudAlert>
             break;
     }
-    
 }
 
 @code {
     private ReservationState reservationState = new ReservationState();
     private bool isLoaded = false;
     private bool isUndoStepDisabled = true;
-
     private int? lastReservationId = null;
+
+    private Event? currentEvent;
+    private Customer? currentCustomer;
+    private Dictionary<int, Seat> seatCache = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -119,48 +131,56 @@ else
         {
             await ReservationStateAsyncInvoker.InitializeAsync();
             reservationState = await ReservationStateService.LoadAsync();
+
+            if (reservationState != null && reservationState.EventId > 0)
+            {
+                currentEvent = await EventService.GetEventByIdAsync(reservationState.EventId);
+                currentCustomer = await CustomerService.GetCustomerByIdAsync(reservationState.CustomerId);
+
+                foreach (var ticket in reservationState.Tickets)
+                {
+                    if (!seatCache.ContainsKey(ticket.SeatId))
+                    {
+                        var seat = await SeatService.GetSeatByIdAsync(ticket.SeatId);
+                        if (seat != null)
+                            seatCache[ticket.SeatId] = seat;
+                    }
+                }
+            }
+
             isLoaded = true;
             isUndoStepDisabled = false;
             StateHasChanged();
         }
-
     }
 
-    private async Task<Seat> GetSeatBySeatId(int seatId)
+    private Seat? GetSeatFromCache(int seatId)
     {
-        return await SeatService.GetSeatByIdAsync(seatId);
-    }
-
-    private async Task<Event> GetEventByEventId(int eventId)
-    {
-        return await EventService.GetEventByIdAsync(eventId);
-    }
-
-    private async Task<Customer> GetCustomerByCustomerId(int customerId)
-    {
-        return await CustomerService.GetCustomerByIdAsync(customerId);
+        return seatCache.TryGetValue(seatId, out var seat) ? seat : null;
     }
 
     private decimal CalculateTotalPrice()
     {
-        return reservationState.Tickets.Sum(t => t.TotalPrice);
+        return reservationState?.Tickets?.Sum(t => t.TotalPrice) ?? 0;
     }
 
     private decimal CalculatePriceBeforeCatering()
     {
-        return reservationState.Tickets.Sum(t => t.Price);
+        return reservationState?.Tickets?.Sum(t => t.Price) ?? 0;
     }
 
     protected async Task CancelReservation()
     {
-        await CustomerService.DeleteCustomerAsync(reservationState.CustomerId);
+        if (reservationState?.CustomerId > 0)
+        {
+            await CustomerService.DeleteCustomerAsync(reservationState.CustomerId);
+        }
 
         await ReservationStateService.ClearAsync();
         reservationState = await ReservationStateService.LoadAsync();
         await ReservationStateAsyncInvoker.Clear();
         StateHasChanged();
         NavigationManager.NavigateTo("/events");
-        
     }
 
     protected async Task UndoReservationStep()
@@ -208,10 +228,7 @@ else
 
             lastReservationId = reservation.Id;
 
-            //save temp history/reservationState
             await ReservationStateAsyncInvoker.SaveTempAsync();
-
-            //delete real history/reservationState
             await ReservationStateAsyncInvoker.Clear();
             await ReservationStateService.ClearAsync();
 
@@ -227,15 +244,15 @@ else
             });
 
             var result = await dialog.Result;
-            bool undoTriggered = result.Data as bool? ?? false;
-            if (!undoTriggered)
+            if (result != null)
             {
-                await ReservationStateAsyncInvoker.ClearTempAsync();
-                NavigationManager.NavigateTo("/events");
+                bool undoTriggered = result.Data as bool? ?? false;
+                if (!undoTriggered)
+                {
+                    await ReservationStateAsyncInvoker.ClearTempAsync();
+                    NavigationManager.NavigateTo("/events");
+                }
             }
-
-            
-            
         }
         catch (Exception ex)
         {
@@ -257,6 +274,14 @@ else
     private async Task HandleStateChanged()
     {
         reservationState = await ReservationStateService.LoadAsync();
+
+        // Reload event/customer ak sa zmenili
+        if (reservationState?.EventId > 0)
+        {
+            currentEvent = await EventService.GetEventByIdAsync(reservationState.EventId);
+            currentCustomer = await CustomerService.GetCustomerByIdAsync(reservationState.CustomerId);
+        }
+
         StateHasChanged();
     }
 }

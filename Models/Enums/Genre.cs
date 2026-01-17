@@ -1,12 +1,15 @@
-﻿public enum Genre
+﻿namespace CinemaSystem.Models.Enums
 {
-    Action,
-    Comedy,
-    Drama,
-    Horror,
-    SciFi,
-    Romance,
-    Thriller,
-    Animation,
-    Documentary
+    public enum Genre
+    {
+        Action,
+        Comedy,
+        Drama,
+        Horror,
+        SciFi,
+        Romance,
+        Thriller,
+        Animation,
+        Documentary
+    }
 }

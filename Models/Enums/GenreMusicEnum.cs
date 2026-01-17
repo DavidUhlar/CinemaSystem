@@ -1,6 +1,9 @@
-﻿public enum GenreMusic
+﻿namespace CinemaSystem.Models.Enums
 {
-    Rock,
-    Rap,
-    Reggae
+    public enum GenreMusic
+    {
+        Rock,
+        Rap,
+        Reggae
+    }
 }

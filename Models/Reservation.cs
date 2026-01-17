@@ -1,4 +1,6 @@
-﻿namespace CinemaSystem.Models
+﻿using CinemaSystem.Models.Enums;
+
+namespace CinemaSystem.Models
 {
     public class Reservation
     {
@@ -10,7 +12,7 @@
 
         public ReservationStatus Status { get; set; }
 
-        public ReservationType Type { get; set; }
+        public ReservationTypeEnum Type { get; set; }
 
         public ReservationPurpose Purpose { get; set; }
 
@@ -21,6 +23,6 @@
         public int CustomerId { get; set; }
         public virtual Customer Customer { get; set; } = null!;
 
-        public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
+        public virtual ICollection<Ticket> Tickets { get; set; } = [];
     }
 }

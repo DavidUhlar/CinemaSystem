@@ -1,22 +1,18 @@
 ﻿using CinemaSystem.Models;
+using CinemaSystem.Models.Enums;
 
 namespace CinemaSystem.Services.DesignPatterns.Builder
 {
-    public class ReservationDirector
+    public class ReservationDirector(IReservationBuilder builder)
     {
-        private IReservationBuilder builder;
-
-        public ReservationDirector(IReservationBuilder builder)
-        {
-            this.builder = builder;
-        }
+        private readonly IReservationBuilder builder = builder;
 
         public Reservation CreateStandardReservation(Customer customer, List<Ticket> tickets, string? note = null)
         {
             builder.Reset()
                 .SetCustomer(customer)
                 .SetTickets(tickets)
-                .SetReservationType(ReservationType.Standard);
+                .SetReservationType(ReservationTypeEnum.Standard);
             if (!string.IsNullOrEmpty(note))
             {
                 builder.SetReservationNote(note);
@@ -30,7 +26,7 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
                 .SetCustomer(customer)
                 .SetTickets(tickets)
                 .SetReservationPurpose(purpose)
-                .SetReservationType(ReservationType.Group);
+                .SetReservationType(ReservationTypeEnum.Group);
             if (!string.IsNullOrEmpty(note))
             {
                 builder.SetReservationNote(note);

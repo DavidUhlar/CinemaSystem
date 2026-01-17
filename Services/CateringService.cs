@@ -1,5 +1,6 @@
 ﻿using CinemaSystem.Data;
 using CinemaSystem.Models;
+using CinemaSystem.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace CinemaSystem.Services

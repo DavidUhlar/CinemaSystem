@@ -1,7 +1,10 @@
-﻿public enum CateringSize
+﻿namespace CinemaSystem.Models.Enums
 {
-    Small,
-    Medium,
-    Large,
-    XXL
+    public enum CateringSize
+    {
+        Small,
+        Medium,
+        Large,
+        XXL
+    }
 }

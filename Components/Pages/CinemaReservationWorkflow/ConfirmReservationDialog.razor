@@ -18,7 +18,7 @@
 
 @code {
     [CascadingParameter]
-    IMudDialogInstance MudDialog { get; set; }
+	IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
     public EventCallback OnUndo { get; set; }

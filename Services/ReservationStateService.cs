@@ -3,15 +3,10 @@ using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
 namespace CinemaSystem.Services
 {
-    public class ReservationStateService
+    public class ReservationStateService(ProtectedSessionStorage storage)
     {
-        private readonly ProtectedSessionStorage storage;
+        private readonly ProtectedSessionStorage storage = storage;
         private const string storageKey = "ReservationState";
-
-        public ReservationStateService(ProtectedSessionStorage storage)
-        {
-            this.storage = storage;
-        }
 
         public async Task<ReservationState> LoadAsync()
         {

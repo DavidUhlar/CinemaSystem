@@ -1,4 +1,6 @@
-﻿namespace CinemaSystem.Services.DesignPatterns.Decorator
+﻿using CinemaSystem.Models.Enums;
+
+namespace CinemaSystem.Services.DesignPatterns.Decorator
 {
     public interface IClientTicket
     {

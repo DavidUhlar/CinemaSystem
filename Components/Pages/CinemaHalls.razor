@@ -17,73 +17,68 @@ else if (!halls.Any())
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Total Rows</th>
-                <th>Seats / Row</th>
-                <th>Total Seats</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var h in halls)
-            {
-                <tr>
-                    <td>@h.Name</td>
-                    <td>@h.TotalRows</td>
-                    <td>@h.SeatsPerRow</td>
-                    <td>@h.Seats.Count()</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-    @foreach (var h in halls) {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Row</th>
-                    @for(int i = 1; i <= h.SeatsPerRow; i++) {
-                        <th></th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @for (int i = 1; i <= h.TotalRows; i++)
-                {
-                    <tr>
-
-                        <th>@i</th>
-                        @foreach (var seat in h.Seats.Where(s => s.Row == i).OrderBy(s => s.Number))
-                        {
-                            <td>@seat.Number</td>
-                        }
-                        
-                        
-                    
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    @foreach(var res in reservations)
+    @foreach (var hall in halls)
     {
-        <div>
-            <h3>Reservation ID: @res.Id</h3>
-            <h3>Reservation ID: @res.ReservationCode</h3>
-            <ul>
-                @foreach(var ticket in res.Tickets) {
-                    <li>Ticket ID: @ticket.Id - Seat ID: @ticket.SeatId</li>
-                }
-            </ul>
-        </div>
-	}
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <MudText Typo="Typo.h5" Class="mb-3">@hall.Name</MudText>
+            <MudText Typo="Typo.body2" Class="mb-4">
+                Total Rows: @hall.TotalRows | Seats per Row: @hall.SeatsPerRow | Total Seats: @hall.Seats.Count
+            </MudText>
+
+            <MudTable Items="@GetHallRows(hall)" Dense="true" Hover="false" Elevation="0" Class="seat-table">
+                <HeaderContent>
+                    <MudTh>Row</MudTh>
+                    @for (int seatNumber = 1; seatNumber <= hall.SeatsPerRow; seatNumber++)
+                    {
+                        var n = seatNumber;
+                        <MudTh Class="text-center">@n</MudTh>
+                    }
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd><strong>@context.RowNumber</strong></MudTd>
+                    @foreach (var seat in context.Seats)
+                    {
+                        <MudTd Class="text-center">
+                            @if (seat != null)
+                            {
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Default"
+                                           Size="Size.Small"
+                                           Disabled="true">
+                                    @seat.Number
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudText>-</MudText>
+                            }
+                        </MudTd>
+                    }
+                </RowTemplate>
+            </MudTable>
+        </MudPaper>
+    }
+    @if (reservations != null)
+    {
+        @foreach (var res in reservations)
+        {
+            <div>
+                <h3>Reservation ID: @res.Id</h3>
+                <h3>Reservation ID: @res.ReservationCode</h3>
+                <ul>
+                    @foreach (var ticket in res.Tickets)
+                    {
+                        <li>Ticket ID: @ticket.Id - Seat ID: @ticket.SeatId</li>
+                    }
+                </ul>
+            </div>
+        }
     }
 }
-@code {
-    private List<CinemaSystem.Models.CinemaHall>? halls;
-    private List<CinemaSystem.Models.Reservation>? reservations;
 
+@code {
+    private List<CinemaHall>? halls;
+    private List<Reservation>? reservations;
     protected override async Task OnInitializedAsync()
     {
         halls = await Db.CinemaHalls
@@ -92,17 +87,38 @@ else
             .ToListAsync();
 
         reservations = await Db.Reservations
-        .Include(h => h.Tickets)
-        .OrderBy(h => h.Id)
-        .ToListAsync();
+            .Include(h => h.Tickets)
+            .OrderBy(h => h.Id)
+            .ToListAsync();
     }
 
-    private List<Seat> getSeats() {
-        var seats = new List<Seat>();
-        var hall = halls.ElementAt(0);
-        
-        seats.AddRange(hall.Seats);
-        
-        return seats;
-	}
+    private List<HallRow> GetHallRows(CinemaHall hall)
+    {
+        var rows = new List<HallRow>();
+
+        for (int rowNumber = 1; rowNumber <= hall.TotalRows; rowNumber++)
+        {
+            var seatsInRow = new List<Seat?>();
+
+            for (int seatNumber = 1; seatNumber <= hall.SeatsPerRow; seatNumber++)
+            {
+                var seat = hall.Seats.FirstOrDefault(s => s.Row == rowNumber && s.Number == seatNumber);
+                seatsInRow.Add(seat);
+            }
+
+            rows.Add(new HallRow
+            {
+                RowNumber = rowNumber,
+                Seats = seatsInRow
+            });
+        }
+
+        return rows;
+    }
+
+    private class HallRow
+    {
+        public int RowNumber { get; set; }
+        public List<Seat?> Seats { get; set; } = new();
+    }
 }

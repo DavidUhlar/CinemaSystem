@@ -1,4 +1,5 @@
 ﻿using CinemaSystem.Models;
+using CinemaSystem.Models.Enums;
 
 namespace CinemaSystem.Services.DesignPatterns.Factory
 {

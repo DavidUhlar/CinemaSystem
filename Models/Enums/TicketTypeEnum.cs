@@ -1,8 +1,11 @@
-﻿public enum TicketType
+﻿namespace CinemaSystem.Models.Enums
 {
-    Standard,
-    Student,
-    Senior,
-    VIP
+    public enum TicketType
+    {
+        Standard,
+        Student,
+        Senior,
+        VIP
+    }
 }
 
