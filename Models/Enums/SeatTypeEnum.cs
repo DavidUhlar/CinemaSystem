@@ -1,6 +1,9 @@
-﻿public enum SeatType
+﻿namespace CinemaSystem.Models.Enums
 {
-    Standard,
-    VIP
+    public enum SeatType
+    {
+        Standard,
+        VIP
+    }
 }
 

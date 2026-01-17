@@ -1,4 +1,6 @@
-﻿namespace CinemaSystem.Models
+﻿using CinemaSystem.Models.Enums;
+
+namespace CinemaSystem.Models
 {
     public class Concert : Event
     {

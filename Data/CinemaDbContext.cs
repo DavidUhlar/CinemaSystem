@@ -1,16 +1,15 @@
 ﻿using CinemaSystem.Models;
+using CinemaSystem.Models.Enums;
+using CinemaSystem.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace CinemaSystem.Data
 {
-    public class CinemaDbContext : DbContext
+    public class CinemaDbContext(DbContextOptions<CinemaDbContext> options) : DbContext(options)
     {
-        public CinemaDbContext(DbContextOptions<CinemaDbContext> options)
-            : base(options)
-        {
-        }
-
         public DbSet<Event> Events { get; set; }
         public DbSet<Concert> Concerts { get; set; }
         public DbSet<FilmShow> FilmShows { get; set; }
@@ -20,6 +19,7 @@ namespace CinemaSystem.Data
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<CateringItem> CateringItems { get; set; }
+        public DbSet<LoginAccount> LoginAccounts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -33,12 +33,14 @@ namespace CinemaSystem.Data
             modelBuilder.Entity<Seat>()
                 .HasOne(s => s.CinemaHall)
                 .WithMany(h => h.Seats)
-                .HasForeignKey(s => s.CinemaHallId);
+                .HasForeignKey(s => s.CinemaHallId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Event>()
                 .HasOne(e => e.CinemaHall)
                 .WithMany(ch => ch.Events)
-                .HasForeignKey(e => e.CinemaHallId);
+                .HasForeignKey(e => e.CinemaHallId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Reservation>()
                 .HasOne(r => r.Customer)
@@ -48,12 +50,14 @@ namespace CinemaSystem.Data
             modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.Event)
                 .WithMany(f => f.Tickets)
-                .HasForeignKey(t => t.EventId);
+                .HasForeignKey(t => t.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.Seat)
                 .WithMany()
-                .HasForeignKey(t => t.SeatId); ;
+                .HasForeignKey(t => t.SeatId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.Reservation)
@@ -92,14 +96,19 @@ namespace CinemaSystem.Data
             SeedData(modelBuilder);
         }
 
-        private void SeedData(ModelBuilder modelBuilder)
+        private static void SeedData(ModelBuilder modelBuilder)
         {
-
+            modelBuilder.Entity<LoginAccount>().HasData(
+                new LoginAccount { Id = 1, Username = "admin", PasswordHash = HashPasswordForSeed("admin123"), 
+                    Name = "Admin", Surname = "Admin"
+                }
+            );
+            
             var halls = new List<CinemaHall>
             {
-                new CinemaHall { Id = 1, Name = "Hall A", TotalRows = 5, SeatsPerRow = 8 },
-                new CinemaHall { Id = 2, Name = "Hall B", TotalRows = 6, SeatsPerRow = 10 },
-                new CinemaHall { Id = 3, Name = "Hall C", TotalRows = 3, SeatsPerRow = 6 }
+                new() { Id = 1, Name = "Hall A", TotalRows = 5, SeatsPerRow = 8 },
+                new() { Id = 2, Name = "Hall B", TotalRows = 6, SeatsPerRow = 10 },
+                new() { Id = 3, Name = "Hall C", TotalRows = 3, SeatsPerRow = 6 }
             };
             modelBuilder.Entity<CinemaHall>().HasData(halls);
 
@@ -117,13 +126,12 @@ namespace CinemaSystem.Data
 
             var reservations = new List<Reservation>
             {
-                new Reservation
-                {
+                new() {
                     Id = 1,
                     ReservationCode = "DUMMY-1",
                     CreatedAt = DateTime.Now,
                     Status = ReservationStatus.Pending,
-                    Type = ReservationType.Standard,
+                    Type = ReservationTypeEnum.Standard,
                     Purpose = ReservationPurpose.None,
                     ReservationNote = "Seeded dummy reservation",
                     TotalPrice = 10.00m,
@@ -134,8 +142,7 @@ namespace CinemaSystem.Data
 
             var tickets = new List<Ticket>
             {
-                new Ticket
-                {
+                new() {
                     Id = 1,
                     Price = 10.00m,
                     Type = TicketType.Standard,
@@ -152,7 +159,7 @@ namespace CinemaSystem.Data
 
         }
 
-        private List<Seat> GenerateSeatsForHalls(List<CinemaHall> halls)
+        private static List<Seat> GenerateSeatsForHalls(List<CinemaHall> halls)
         {
             var seats = new List<Seat>();
             int seatId = 1;
@@ -177,76 +184,83 @@ namespace CinemaSystem.Data
             return seats;
         }
 
-        private List<FilmShow> GenerateFilmShows()
+        private static string HashPasswordForSeed(string password)
         {
-            return new List<FilmShow>
+            var bytes = Encoding.UTF8.GetBytes(password);
+            var hash = SHA256.HashData(bytes);
+            return Convert.ToBase64String(hash);
+        }
+
+        private static List<FilmShow> GenerateFilmShows()
             {
-                new FilmShow { 
+            return [ 
+                new() {
                     Id = 1,
                     Title = "Inception",
                     Description = "Thriller by Christopher Nolan.",
-                    AgeRestriction = AgeEnum.Age15, 
+                    AgeRestriction = AgeEnum.Age15,
                     Genre = Genre.Thriller,
                     LengthInMinutes = 148,
                     Director = "Christopher Nolan",
                     BasePrice = 10.00m,
-                    CinemaHallId = 1, 
+                    CinemaHallId = 1,
                     StartTime = DateTime.Now.AddHours(2),
                     Type = EventType.Film
                 },
-                new FilmShow { 
+                new() {
                     Id = 2,
-                    Title = "The Godfather", 
-                    Description = "A classic mafia drama.", 
-                    AgeRestriction = AgeEnum.Age18, 
+                    Title = "The Godfather",
+                    Description = "A classic mafia drama.",
+                    AgeRestriction = AgeEnum.Age18,
                     Genre = Genre.Drama,
                     LengthInMinutes = 175,
                     Director = "Francis Ford Coppola",
                     BasePrice = 10.50m,
-                    CinemaHallId = 2, 
+                    CinemaHallId = 2,
                     StartTime = DateTime.Now.AddHours(3),
                     Type = EventType.Film
                 },
-                new FilmShow { 
+                new() {
                     Id = 3,
-                    Title = "Toy Story", 
-                    Description = "An animated adventure for all ages.", 
-                    AgeRestriction = AgeEnum.Age12, 
+                    Title = "Toy Story",
+                    Description = "An animated adventure for all ages.",
+                    AgeRestriction = AgeEnum.Age12,
                     Genre = Genre.Animation,
                     LengthInMinutes = 81,
                     Director = "John Lasseter",
                     BasePrice = 9.50m,
-                    CinemaHallId = 3, 
+                    CinemaHallId = 3,
                     StartTime = DateTime.Now.AddHours(4),
                     Type = EventType.Film
                 }
-            };
+                
+            ];
         }
 
-        private List<Customer> GenerateCustomers()
+        private static List<Customer> GenerateCustomers()
         {
-            return new List<Customer>
-            {
+            return
+            [
                 new Customer { Id = 1, FirstName = "Jozko", LastName="Ferko", Email = "mail@gmail.com" }
-            };
+            ];
         }
 
-        private List<CateringItem> GenerateCatering()
+        private static List<CateringItem> GenerateCatering()
         {
-            return new List<CateringItem>
-            {
+            return
+            [
                 // popcorn
-                new CateringItem { Id = 1, Type = CateringType.Popcorn, Size = CateringSize.Small, Price = 2.50m },
-                new CateringItem { Id = 2, Type = CateringType.Popcorn, Size = CateringSize.Medium, Price = 3.50m },
-                new CateringItem { Id = 3, Type = CateringType.Popcorn, Size = CateringSize.Large, Price = 4.50m },
-                new CateringItem { Id = 4, Type = CateringType.Popcorn, Size = CateringSize.XXL, Price = 6.00m },
+                new() { Id = 1, Type = CateringType.Popcorn, Size = CateringSize.Small, Price = 2.50m },
+                new() { Id = 2, Type = CateringType.Popcorn, Size = CateringSize.Medium, Price = 3.50m },
+                new() { Id = 3, Type = CateringType.Popcorn, Size = CateringSize.Large, Price = 4.50m },
+                new() { Id = 4, Type = CateringType.Popcorn, Size = CateringSize.XXL, Price = 6.00m },
         
                 // drink
-                new CateringItem { Id = 5, Type = CateringType.Drink, Size = CateringSize.Small, Price = 2.00m },
-                new CateringItem { Id = 6, Type = CateringType.Drink, Size = CateringSize.Medium, Price = 3.00m },
-                new CateringItem { Id = 7, Type = CateringType.Drink, Size = CateringSize.Large, Price = 4.00m },
-                new CateringItem { Id = 8, Type = CateringType.Drink, Size = CateringSize.XXL, Price = 5.50m }
-            };
+                new() { Id = 5, Type = CateringType.Drink, Size = CateringSize.Small, Price = 2.00m },
+                new() { Id = 6, Type = CateringType.Drink, Size = CateringSize.Medium, Price = 3.00m },
+                new() { Id = 7, Type = CateringType.Drink, Size = CateringSize.Large, Price = 4.00m },
+                new() { Id = 8, Type = CateringType.Drink, Size = CateringSize.XXL, Price = 5.50m }
+            ];
         }
     }
 }

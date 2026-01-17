@@ -7,7 +7,7 @@
         public int TotalRows { get; set; }
         public int SeatsPerRow { get; set; }
 
-        public virtual ICollection<Seat> Seats { get; set; } = new List<Seat>();
-        public virtual ICollection<Event> Events { get; set; } = new List<Event>();
+        public virtual ICollection<Seat> Seats { get; set; } = [];
+        public virtual ICollection<Event> Events { get; set; } = [];
     }
 }

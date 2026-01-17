@@ -97,7 +97,7 @@
 
     private CinemaHall? selectedHall;
     private ReservationState reservationState = new ReservationState();
-    private bool isLoaded = false;
+    // private bool isLoaded = false;
 
     private Dictionary<int, TicketType> seatTicketTypes = new();
     private List<RowModel> matrixRows = new List<RowModel>();
@@ -119,7 +119,7 @@
             reservedSeats = await SeatService.GetOccupiedSeatIdsAsync(reservationState.EventId);
             BuildMatrix();
 
-            isLoaded = true;
+            // isLoaded = true;
             StateHasChanged();
         }
 

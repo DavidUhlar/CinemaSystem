@@ -3,17 +3,13 @@ using CinemaSystem.Models;
 
 namespace CinemaSystem.Services.DesignPatterns.Command
 {
-    public class CreateReservationCommand : ICommand
+    public class CreateReservationCommand(CinemaDbContext cinemaDb, Reservation reservation, MailService mailService) : ICommand
     {
-        private readonly CinemaDbContext cinemaDb;
-        private readonly Reservation reservation;
+        private readonly CinemaDbContext cinemaDb = cinemaDb;
+        private readonly Reservation reservation = reservation;
+        private readonly MailService mailService = mailService;
 
         private int lastReservationId;
-        public CreateReservationCommand(CinemaDbContext cinemaDb, Reservation reservation)
-        {
-            this.reservation = reservation;
-            this.cinemaDb = cinemaDb;
-        }
 
         public void Execute()
         {
@@ -23,6 +19,22 @@ namespace CinemaSystem.Services.DesignPatterns.Command
             lastReservationId = reservation.Id;
 
             Console.WriteLine($"Reservation with ID {reservation.Id} created.");
+
+            var seatInfo = reservation.Tickets
+                  .Select(t => $"Row {t.Seat.Row}, Seat {t.Seat.Number} - {t.Type}")
+                  .ToList();
+           
+
+            mailService.SendReservationConfirmation(
+                reservation.Customer.Email,
+                $"{reservation.Customer.FirstName} {reservation.Customer.LastName}",
+                reservation.ReservationCode,
+                reservation.Tickets.First().Event.Title,
+                reservation.Tickets.First().Event.StartTime,
+                seatInfo,
+                reservation.TotalPrice
+
+            );
         }
 
         public void Undo()
@@ -35,6 +47,14 @@ namespace CinemaSystem.Services.DesignPatterns.Command
                     cinemaDb.Reservations.Remove(reservationToRemove);
                     cinemaDb.SaveChanges();
                     Console.WriteLine($"Reservation with ID {lastReservationId} removed.");
+
+
+                    mailService.SendReservationCancellation(
+                        reservationToRemove.Customer.Email,
+                        $"{reservationToRemove.Customer.FirstName} {reservationToRemove.Customer.LastName}",
+                        reservationToRemove.ReservationCode,
+                        reservationToRemove.Tickets.First().Event.Title
+                    );
                 }
             }
         }

@@ -1,7 +1,9 @@
-﻿public enum AgeEnum
+﻿namespace CinemaSystem.Models.Enums
 {
-    Age12 = 12,
-    Age15 = 15,
-    Age18 = 18
+    public enum AgeEnum
+    {
+        Age12 = 12,
+        Age15 = 15,
+        Age18 = 18
+    }
 }
-

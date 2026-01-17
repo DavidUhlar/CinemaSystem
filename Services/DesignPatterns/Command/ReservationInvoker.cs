@@ -2,7 +2,7 @@
 {
     public class ReservationInvoker
     {
-        private readonly Stack<ICommand> executedCommands = new Stack<ICommand>();
+        private readonly Stack<ICommand> executedCommands = new();
         
         public void ExecuteCommand(ICommand command)
         {

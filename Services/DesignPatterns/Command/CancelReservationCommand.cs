@@ -4,17 +4,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CinemaSystem.Services.DesignPatterns.Command
 {
-    public class CancelReservationCommand : ICommand
+    public class CancelReservationCommand(CinemaDbContext cinemaDb, int reservationId) : ICommand
     {
-        private readonly CinemaDbContext cinemaDb;
-        private readonly int reservationId;
+        private readonly CinemaDbContext cinemaDb = cinemaDb;
+        private readonly int reservationId = reservationId;
 
         private Reservation? lastReservation;
-        public CancelReservationCommand(CinemaDbContext cinemaDb, int reservationId)
-        {
-            this.reservationId = reservationId;
-            this.cinemaDb = cinemaDb;
-        }
 
         public void Execute()
         {

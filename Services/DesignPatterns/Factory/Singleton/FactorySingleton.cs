@@ -1,10 +1,12 @@
-﻿namespace CinemaSystem.Services.DesignPatterns.Factory.Singleton
+﻿using CinemaSystem.Models.Enums;
+
+namespace CinemaSystem.Services.DesignPatterns.Factory.Singleton
 {
     public class FactorySingleton
     {
         private static FactorySingleton? instance;
         private readonly Dictionary<TicketType, ITicketFactory> factories;
-        private static readonly object lockObject = new object();
+        private static readonly Lock lockObject = new();
         private FactorySingleton()
         {
             factories = new Dictionary<TicketType, ITicketFactory>
@@ -21,10 +23,7 @@
             {
                 lock (lockObject)
                 {
-                    if (instance == null)
-                    {
-                        instance = new FactorySingleton();
-                    }
+                    instance ??= new FactorySingleton();
                 }
             }
             return instance;

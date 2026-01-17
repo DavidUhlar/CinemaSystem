@@ -2,19 +2,12 @@
 
 namespace CinemaSystem.Services
 {
-    public class TmdbService
+    public class TmdbService(HttpClient httpClient, IConfiguration configuration)
     {
-        private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
-        private const string BaseUrl = "https://api.themoviedb.org/3";
-
-        public TmdbService(HttpClient httpClient, IConfiguration configuration)
-        {
-            _httpClient = httpClient;
-            _apiKey = configuration["Tmdb:ApiKey"]
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly string _apiKey = configuration["Tmdb:ApiKey"]
                 ?? throw new InvalidOperationException("TMDB API key not configured");
-        }
-
+        private const string BaseUrl = "https://api.themoviedb.org/3";
         private static readonly Dictionary<int, string> GenreMap = new()
     {
         { 28, "Action" },
@@ -45,7 +38,7 @@ namespace CinemaSystem.Services
                 var searchUrl = $"{BaseUrl}/search/movie?api_key={_apiKey}&query={Uri.EscapeDataString(movieName)}&language=en-US";
                 var searchResponse = await _httpClient.GetFromJsonAsync<TmdbSearchResponse>(searchUrl);
 
-                if (searchResponse?.Results == null || !searchResponse.Results.Any())
+                if (searchResponse?.Results == null || searchResponse.Results.Count == 0)
                     return null;
 
                 var movie = searchResponse.Results.First();
@@ -61,10 +54,9 @@ namespace CinemaSystem.Services
                     Rating = movie.VoteAverage,
                     ReleaseDate = movie.ReleaseDate,
 
-                    Genres = movie.GenreIds
+                    Genres = [.. movie.GenreIds
                         .Where(id => GenreMap.ContainsKey(id))
-                        .Select(id => GenreMap[id])
-                        .ToList()
+                        .Select(id => GenreMap[id])]
                 };
             }
             catch (Exception ex)
@@ -78,7 +70,7 @@ namespace CinemaSystem.Services
     public class TmdbSearchResponse
     {
         [JsonPropertyName("results")]
-        public List<TmdbMovie> Results { get; set; } = new();
+        public List<TmdbMovie> Results { get; set; } = [];
     }
 
     public class TmdbMovie
@@ -105,10 +97,9 @@ namespace CinemaSystem.Services
         public string? ReleaseDate { get; set; }
 
         [JsonPropertyName("genre_ids")]
-        public List<int> GenreIds { get; set; } = new();
+        public List<int> GenreIds { get; set; } = [];
     }
 
-    // Výsledná trieda pre aplikáciu
     public class MovieInfo
     {
         public string Title { get; set; } = string.Empty;
@@ -117,6 +108,6 @@ namespace CinemaSystem.Services
         public string? PosterUrl { get; set; }
         public double Rating { get; set; }
         public string? ReleaseDate { get; set; }
-        public List<string> Genres { get; set; } = new();
+        public List<string> Genres { get; set; } = [];
     }
 }

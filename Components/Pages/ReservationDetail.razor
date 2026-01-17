@@ -1,0 +1,146 @@
+﻿@page "/reservation/detail/{reservationCode}"
+@inject ReservationService ReservationService
+@inject EventService EventService
+@inject SeatService SeatService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Reservation Detail</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (reservation == null)
+    {
+        <MudAlert Severity="Severity.Warning">
+            Reservation not found. Please check your reservation code.
+        </MudAlert>
+        <MudButton Href="/events" Variant="Variant.Filled" Color="Color.Primary" Class="mt-3">
+            Browse Events
+        </MudButton>
+    }
+    else
+    {
+        <MudPaper Class="pa-4" Elevation="3">
+            <div class="d-flex justify-space-between align-center mb-4">
+                <MudText Typo="Typo.h4">Reservation Details</MudText>
+                <MudChip T="string" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle">
+                    @reservation.Status
+                </MudChip>
+            </div>
+
+            <MudDivider Class="mb-4" />
+
+            <!-- Reservation Info -->
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.h6" Class="mb-2">Reservation Information</MudText>
+                    <MudText><strong>Code:</strong> @reservation.ReservationCode</MudText>
+                    <MudText><strong>Created:</strong> @reservation.CreatedAt.ToString("dddd, MMMM dd, yyyy 'at' HH:mm")</MudText>
+                    <MudText><strong>Status:</strong> @reservation.Status</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.h6" Class="mb-2">Customer Information</MudText>
+                    <MudText><strong>Name:</strong> @reservation.Customer.FirstName @reservation.Customer.LastName</MudText>
+                    <MudText><strong>Email:</strong> @reservation.Customer.Email</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-4" />
+
+            <!-- Event Info -->
+            @if (eventDetails != null)
+            {
+                <MudText Typo="Typo.h6" Class="mb-2">Event Information</MudText>
+                <MudText><strong>Event:</strong> @eventDetails.Title</MudText>
+                <MudText><strong>Date & Time:</strong> @eventDetails.StartTime.ToString("dddd, MMMM dd, yyyy 'at' HH:mm")</MudText>
+                <MudText><strong>Hall:</strong> @eventDetails.CinemaHall?.Name</MudText>
+            }
+
+            <MudDivider Class="my-4" />
+
+            <!-- Tickets -->
+            <MudText Typo="Typo.h6" Class="mb-3">Tickets (@reservation.Tickets.Count)</MudText>
+            
+            @foreach (var (ticket, index) in reservation.Tickets.Select((t, i) => (t, i + 1)))
+            {
+                <MudPaper Class="pa-3 mb-2" Outlined="true">
+                    <MudText><strong>Ticket #@index</strong> - @ticket.Type</MudText>
+                    <MudText>
+                        <strong>Seat:</strong> Row @ticket.Seat.Row, Seat @ticket.Seat.Number
+                    </MudText>
+                    <MudText><strong>Base Price:</strong> @ticket.Price.ToString("C")</MudText>
+                    
+                    @if (ticket.FoodItemId.HasValue || ticket.DrinkItemId.HasValue)
+                    {
+                        <MudText Color="Color.Secondary" Class="mt-2">
+                            <strong>Extras:</strong> @ticket.TotalDescription
+                        </MudText>
+                    }
+                    
+                    <MudText Color="Color.Success" Class="mt-2">
+                        <strong>Total:</strong> @ticket.TotalPrice.ToString("C")
+                    </MudText>
+                </MudPaper>
+            }
+
+            <MudDivider Class="my-4" />
+
+            <!-- Total Price -->
+            <div class="d-flex justify-end">
+                <MudText Typo="Typo.h5" Color="Color.Primary">
+                    <strong>Grand Total: @reservation.TotalPrice.ToString("C")</strong>
+                </MudText>
+            </div>
+
+            @if (!string.IsNullOrEmpty(reservation.ReservationNote))
+            {
+                <MudDivider Class="my-4" />
+                <MudText Typo="Typo.h6">Notes</MudText>
+                <MudText>@reservation.ReservationNote</MudText>
+            }
+
+            <!-- Actions -->
+            <MudDivider Class="my-4" />
+            <div class="d-flex gap-2">
+                <MudButton Href="/events" Variant="Variant.Outlined" Color="Color.Primary">
+                    Browse More Events
+                </MudButton>
+            </div>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string ReservationCode { get; set; } = string.Empty;
+
+    private Reservation? reservation;
+    private Event? eventDetails;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            reservation = await ReservationService.GetReservationByCodeAsync(ReservationCode);
+
+            if (reservation != null && reservation.Tickets.Any())
+            {
+                var firstTicket = reservation.Tickets.First();
+                eventDetails = await EventService.GetEventByIdAsync(firstTicket.EventId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading reservation: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+}

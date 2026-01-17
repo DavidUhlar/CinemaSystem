@@ -1,5 +1,6 @@
 ﻿using CinemaSystem.Components.Pages.CinemaReservationWorkflow.EventPages;
 using CinemaSystem.Models;
+using CinemaSystem.Models.Enums;
 using CinemaSystem.Services.DesignPatterns.Strategy.Time;
 using CinemaSystem.Services.DesignPatterns.Strategy.Type;
 

@@ -1,5 +1,6 @@
 ﻿using CinemaSystem.Data;
 using CinemaSystem.Models;
+using CinemaSystem.Models.Enums;
 using CinemaSystem.Services.DesignPatterns.Builder;
 using CinemaSystem.Services.DesignPatterns.Command;
 using CinemaSystem.Services.DesignPatterns.Decorator;
@@ -9,17 +10,12 @@ using CinemaSystem.Services.DesignPatterns.Strategy;
 
 namespace CinemaSystem.Services.DesignPatterns.Facade
 {
-    public class ReservationFacade
+    public class ReservationFacade(CinemaDbContext cinemaDbContext, ReservationInvoker reservationInvoker, MailService mailService)
     {
-        private readonly CinemaDbContext cinemaDb;
-        private readonly FactorySingleton factorySingleton;
-        private readonly ReservationInvoker reservationInvoker;
-        public ReservationFacade(CinemaDbContext cinemaDbContext, ReservationInvoker reservationInvoker) 
-        {
-            cinemaDb = cinemaDbContext;
-            factorySingleton = FactorySingleton.GetInstance();
-            this.reservationInvoker = reservationInvoker;
-        }
+        private readonly CinemaDbContext cinemaDb = cinemaDbContext;
+        private readonly FactorySingleton factorySingleton = FactorySingleton.GetInstance();
+        private readonly ReservationInvoker reservationInvoker = reservationInvoker;
+        private readonly MailService mailService = mailService;
 
         public Ticket CreateTicket(int eventId, int seatId, TicketType ticketType)
         {
@@ -30,7 +26,7 @@ namespace CinemaSystem.Services.DesignPatterns.Facade
 
             Ticket ticket = factory.CreateTicket(eventEntity, seatEntity);
 
-            ApplyPricingStrategy pricingStrategy = new ApplyPricingStrategy(ticketType);
+            ApplyPricingStrategy pricingStrategy = new(ticketType);
             ticket.Price = pricingStrategy.CalculateFinalPrice(eventEntity);
 
             return ticket;
@@ -45,7 +41,7 @@ namespace CinemaSystem.Services.DesignPatterns.Facade
 
             TicketDto ticket = factory.CreateTicketDto(eventEntity, seatEntity);
 
-            ApplyPricingStrategy pricingStrategy = new ApplyPricingStrategy(ticketType);
+            ApplyPricingStrategy pricingStrategy = new(ticketType);
             ticket.Price = pricingStrategy.CalculateFinalPrice(eventEntity);
 
             return ticket;
@@ -91,7 +87,7 @@ namespace CinemaSystem.Services.DesignPatterns.Facade
                 reservation = director.CreateStandardReservation(customer, tickets, note);
             }
 
-            CreateReservationCommand command = new CreateReservationCommand(cinemaDb, reservation);
+            CreateReservationCommand command = new(cinemaDb, reservation, mailService);
             reservationInvoker.ExecuteCommand(command);
             return reservation;
             
@@ -104,7 +100,7 @@ namespace CinemaSystem.Services.DesignPatterns.Facade
 
         public void CancelReservation(int reservationId)
         {
-            CancelReservationCommand command = new CancelReservationCommand(cinemaDb, reservationId);
+            CancelReservationCommand command = new(cinemaDb, reservationId);
             reservationInvoker.ExecuteCommand(command);
         }
     }

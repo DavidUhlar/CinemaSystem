@@ -1,5 +1,8 @@
-﻿public enum CateringType
+﻿namespace CinemaSystem.Models.Enums
 {
-    Popcorn,
-    Drink,
+    public enum CateringType
+    {
+        Popcorn,
+        Drink,
+    }
 }

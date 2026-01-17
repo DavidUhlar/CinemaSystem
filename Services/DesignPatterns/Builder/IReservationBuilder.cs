@@ -1,4 +1,5 @@
 ﻿using CinemaSystem.Models;
+using CinemaSystem.Models.Enums;
 
 namespace CinemaSystem.Services.DesignPatterns.Builder
 {
@@ -9,7 +10,7 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
         IReservationBuilder SetCustomer(Customer customer);
         IReservationBuilder SetReservationNote(string note);
         IReservationBuilder SetReservationPurpose(ReservationPurpose purpose);
-        IReservationBuilder SetReservationType(ReservationType type);
+        IReservationBuilder SetReservationType(ReservationTypeEnum type);
         Reservation Build();
     }
 }

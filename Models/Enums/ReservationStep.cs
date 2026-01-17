@@ -1,8 +1,11 @@
-﻿public enum ReservationStep
+﻿namespace CinemaSystem.Models.Enums
 {
-    CustomerCreated,
-    SeatSelection,
-    Catering,
-    Summary,
-    Completed
+    public enum ReservationStep
+    {
+        CustomerCreated,
+        SeatSelection,
+        Catering,
+        Summary,
+        Completed
+    }
 }

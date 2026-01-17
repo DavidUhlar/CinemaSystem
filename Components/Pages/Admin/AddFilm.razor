@@ -1,0 +1,335 @@
+﻿@page "/admin/add-film"
+@inject EventService EventService
+@inject CinemaHallService CinemaHallService
+@inject TmdbService TmdbService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject ProtectedSessionStorage SessionStorage
+
+<PageTitle>Add Film Screening</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    @if (isLoaded)
+    {
+        @if (isLoggedIn)
+        {
+            <MudBreadcrumbs Items="_breadcrumbs" Class="mb-4"></MudBreadcrumbs>
+
+            <MudText Typo="Typo.h4" Class="mb-6">Add Film Screening</MudText>
+
+            <MudGrid>
+                <!-- TMDB Search -->
+                <MudItem xs="12" md="5">
+                    <MudPaper Class="pa-4" Elevation="2">
+                        <MudText Typo="Typo.h6" Class="mb-4">Search Movie (TMDB)</MudText>
+                        
+                        <MudTextField @bind-Value="searchQuery" 
+                                      Label="Movie Title" 
+                                      Variant="Variant.Outlined"
+                                      Adornment="Adornment.End"
+                                      AdornmentIcon="@Icons.Material.Filled.Search" />
+                        
+                        <MudButton OnClick="SearchMovie" 
+                                   Variant="Variant.Filled" 
+                                   Color="Color.Primary" 
+                                   Class="mt-2"
+                                   FullWidth="true"
+                                   Disabled="isSearching">
+                            @if (isSearching)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                            }
+                            else
+                            {
+                                <span>Search TMDB</span>
+                            }
+                        </MudButton>
+
+                        @if (movieInfo != null)
+                        {
+                            <MudDivider Class="my-4" />
+                            
+                            @if (!string.IsNullOrEmpty(movieInfo.PosterUrl))
+                            {
+                                <MudImage Src="@movieInfo.PosterUrl" 
+                                          Alt="@movieInfo.Title"
+                                          Class="rounded-lg mb-3"
+                                          Style="width: 100%;" />
+                            }
+                            
+                            <MudText Typo="Typo.h6">@movieInfo.Title</MudText>
+                            
+                            @if (movieInfo.Genres != null && movieInfo.Genres.Any())
+                            {
+                                <div class="mt-2">
+                                    @foreach (var genre in movieInfo.Genres)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Primary">@genre</MudChip>
+                                    }
+                                </div>
+                            }
+                            
+                            <MudRating ReadOnly="true" SelectedValue="@((int)(movieInfo.Rating / 2))" Class="mt-2" />
+                            
+                            <MudText Typo="Typo.body2" Class="mt-2">@movieInfo.Description</MudText>
+                            
+                            <MudButton OnClick="UseMovieInfo" 
+                                       Variant="Variant.Filled" 
+                                       Color="Color.Success" 
+                                       Class="mt-3"
+                                       FullWidth="true">
+                                Use This Movie
+                            </MudButton>
+                        }
+                    </MudPaper>
+                </MudItem>
+
+                <!-- Film Form -->
+                <MudItem xs="12" md="7">
+                    <MudPaper Class="pa-4" Elevation="2">
+                        <MudText Typo="Typo.h6" Class="mb-4">Screening Details</MudText>
+
+                        <MudTextField @bind-Value="filmTitle" 
+                                      Label="Film Title" 
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Class="mb-3" />
+
+                        <MudTextField @bind-Value="filmDescription" 
+                                      Label="Description" 
+                                      Variant="Variant.Outlined"
+                                      Lines="4"
+                                      Class="mb-3" />
+
+                        <MudSelect @bind-Value="selectedHallId" 
+                                   Label="Cinema Hall" 
+                                   Variant="Variant.Outlined"
+                                   Required="true"
+                                   Class="mb-3">
+                            @foreach (var hall in cinemaHalls)
+                            {
+                                <MudSelectItem Value="@hall.Id">
+                                    @hall.Name (@hall.TotalRows x @hall.SeatsPerRow seats)
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudDatePicker @bind-Date="screeningDate" 
+                                       Label="Screening Date" 
+                                       Variant="Variant.Outlined"
+                                       Required="true"
+                                       MinDate="DateTime.Today"
+                                       Class="mb-3" />
+
+                        <MudTimePicker @bind-Time="screeningTime" 
+                                       Label="Screening Time" 
+                                       Variant="Variant.Outlined"
+                                       Required="true"
+                                       Class="mb-3" />
+                        <MudNumericField @bind-Value="durationMinutes"
+                                         Label="Duration (minutes)"
+                                         Variant="Variant.Outlined"
+                                         Min="30"
+                                         Max="300"
+                                         Step="5"
+                                         Required="true"
+                                         Class="mb-3" />
+
+                        <MudNumericField @bind-Value="basePrice" 
+                                         Label="Base Price (EUR)" 
+                                         Variant="Variant.Outlined"
+                                         Min="0m"
+                                         Step="1m"
+                                         Required="true"
+                                         Class="mb-3" />
+
+                        <MudDivider Class="my-4" />
+
+                        <div class="d-flex gap-2">
+                            <MudButton OnClick="CreateFilmScreening" 
+                                       Variant="Variant.Filled" 
+                                       Color="Color.Primary"
+                                       Disabled="isSaving"
+                                       StartIcon="@Icons.Material.Filled.Save">
+                                @if (isSaving)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                }
+                                else
+                                {
+                                    <span>Create Screening</span>
+                                }
+                            </MudButton>
+
+                            <MudButton Href="/admin" 
+                                       Variant="Variant.Outlined" 
+                                       Color="Color.Default"
+                                       StartIcon="@Icons.Material.Filled.Cancel">
+                                Cancel
+                            </MudButton>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+        else
+        {
+            <MudText>Redirecting to login...</MudText>
+        }
+    }
+    else
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+</MudContainer>
+
+@code {
+    private bool isLoggedIn = false;
+    private bool isLoaded = false;
+    private bool isSearching = false;
+    private bool isSaving = false;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Admin", href: "/admin"),
+        new BreadcrumbItem("Add Film", href: null, disabled: true)
+    };
+
+    // TMDB Search
+    private string searchQuery = "";
+    private MovieInfo? movieInfo;
+
+    private string filmTitle = "";
+    private string filmDescription = "";
+    private int selectedHallId;
+    private DateTime? screeningDate = DateTime.Today.AddDays(1);
+    private TimeSpan? screeningTime = new TimeSpan(19, 0, 0);
+    private decimal basePrice = 5;
+    private int durationMinutes = 120;
+
+    private List<CinemaHall> cinemaHalls = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var loginResult = await SessionStorage.GetAsync<bool>("IsLoggedIn");
+            isLoggedIn = loginResult.Success && loginResult.Value;
+
+            if (!isLoggedIn)
+            {
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+
+            cinemaHalls = await CinemaHallService.GetAllHallsAsync();
+            if (cinemaHalls.Any())
+            {
+                selectedHallId = cinemaHalls.First().Id;
+            }
+
+            isLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SearchMovie()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+            return;
+
+        isSearching = true;
+        movieInfo = await TmdbService.GetMovieInfoAsync(searchQuery);
+        isSearching = false;
+    }
+
+    private void UseMovieInfo()
+    {
+        if (movieInfo == null)
+            return;
+
+        filmTitle = movieInfo.Title;
+        filmDescription = movieInfo.Description;
+        Snackbar.Add("Movie info loaded!", Severity.Success);
+    }
+
+    private async Task CreateFilmScreening()
+    {
+        if (string.IsNullOrWhiteSpace(filmTitle))
+        {
+            Snackbar.Add("Please enter film title", Severity.Error);
+            return;
+        }
+
+        if (selectedHallId == 0)
+        {
+            Snackbar.Add("Please select a cinema hall", Severity.Error);
+            return;
+        }
+
+        if (!screeningDate.HasValue || !screeningTime.HasValue)
+        {
+            Snackbar.Add("Please select date and time", Severity.Error);
+            return;
+        }
+
+        isSaving = true;
+
+        try
+        {
+            var startDateTime = screeningDate.Value.Date + screeningTime.Value;
+
+            var conflicts = await EventService.GetConflictingEventsAsync(
+                selectedHallId,
+                startDateTime,
+                durationMinutes);
+
+            if (conflicts.Any())
+            {
+                var conflictMessages = conflicts.Select(c =>
+                    $"• {c.Title} ({c.StartTime:HH:mm} - {GetEventEndTime(c):HH:mm})");
+
+                Snackbar.Add(
+                    $"Hall is already booked at this time!\n{string.Join("\n", conflictMessages)}",
+                    Severity.Warning,
+                    config => { config.VisibleStateDuration = 5000; });
+
+                isSaving = false;
+                return;
+            }
+
+            var filmEvent = new FilmShow
+            {
+                Title = filmTitle,
+                Description = filmDescription,
+                StartTime = startDateTime,
+                BasePrice = basePrice,
+                CinemaHallId = selectedHallId,
+                Director = "Unknown",
+                LengthInMinutes = durationMinutes
+            };
+
+            await EventService.CreateEventAsync(filmEvent);
+
+            Snackbar.Add("Film screening created successfully!", Severity.Success);
+            NavigationManager.NavigateTo("/events");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating screening: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private DateTime GetEventEndTime(Event evt)
+    {
+        if (evt is FilmShow film)
+            return evt.StartTime.AddMinutes(film.LengthInMinutes);
+        else
+            return evt.StartTime.AddMinutes(160);
+    }
+}

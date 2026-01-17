@@ -1,9 +1,11 @@
-﻿public enum ReservationPurpose
+﻿namespace CinemaSystem.Models.Enums
 {
-    TeamBuilding,
-    Birthday,
-    School,
-    Other,
-    None
+    public enum ReservationPurpose
+    {
+        TeamBuilding,
+        Birthday,
+        School,
+        Other,
+        None
+    }
 }
-

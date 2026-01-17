@@ -1,4 +1,6 @@
-﻿namespace CinemaSystem.Models
+﻿using CinemaSystem.Models.Enums;
+
+namespace CinemaSystem.Models
 {
     public abstract class Event
     {
@@ -12,6 +14,6 @@
         public int CinemaHallId { get; set; }
         public virtual CinemaHall CinemaHall { get; set; } = null!;
 
-        public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
+        public virtual ICollection<Ticket> Tickets { get; set; } = [];
     }
 }

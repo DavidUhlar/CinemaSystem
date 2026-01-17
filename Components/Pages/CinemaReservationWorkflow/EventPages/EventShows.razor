@@ -8,6 +8,7 @@
 @inject ProtectedSessionStorage ProtectedSessionStore
 @inject ReservationStateAsyncInvoker ReservationStateAsyncInvoker
 @inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
 
 <PageTitle>Events</PageTitle>
 
@@ -50,10 +51,24 @@ else
             <MudTd DataLabel="Start Time">@context.StartTime.ToString("g")</MudTd>
             <MudTd DataLabel="Base Price">@context.BasePrice.ToString("C")</MudTd>
             <MudTd>
-                <MudButton OnClick="@(()=>OpenDialogAsync(context))" Variant="Variant.Filled" Color="Color.Primary">
-                    <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" />
-                    <MudText Class="ml-2">Reserve</MudText>
-                </MudButton>
+                @if (isLoggedIn)
+                {
+                    <!-- Admin tlaèidlá -->
+                    <MudButton OnClick="@(() => DeleteEvent(context))"
+                               Variant="Variant.Filled"
+                               Color="Color.Error"
+                               Size="Size.Small">
+                        <MudIcon Icon="@Icons.Material.Filled.Delete" />
+                        <MudText Class="ml-2">Delete</MudText>
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton OnClick="@(()=>OpenDialogAsync(context))" Variant="Variant.Filled" Color="Color.Primary">
+                        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" />
+                        <MudText Class="ml-2">Reserve</MudText>
+                    </MudButton>
+                }
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -62,7 +77,8 @@ else
 @code {
     private List<Event>? events;
     private ReservationState reservationState = new ReservationState();
-    private bool isLoaded = false;
+    // private bool isLoaded = false;
+    private bool isLoggedIn = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -72,10 +88,53 @@ else
     {
         if (firstRender)
         {
+            var loginResult = await ProtectedSessionStore.GetAsync<bool>("IsLoggedIn");
+            isLoggedIn = loginResult.Success && loginResult.Value;
+
             await ReservationStateAsyncInvoker.InitializeAsync();
             reservationState = await ReservationStateService.LoadAsync();
-            isLoaded = true;
+            // isLoaded = true;
             StateHasChanged();
+        }
+    }
+
+    private async Task DeleteEvent(Event eventToDelete)
+    {
+        var parameters = new DialogParameters
+        {
+            ["ContentText"] = $"Are you sure you want to delete '{eventToDelete.Title}'? This will remove all reservations and seats for this event.",
+            ["ButtonText"] = "Delete",
+            ["Color"] = Color.Error
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Event", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            try
+            {
+                await EventService.DeleteEventAsync(eventToDelete.Id);
+
+                // Refresh list
+                events = await EventService.GetAllEventsAsync();
+
+                Snackbar.Add(
+                    $"Event {eventToDelete.Title} deleted",
+                    Severity.Success,
+                    config => { config.VisibleStateDuration = 5000; });
+                
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(
+                    $"Event {eventToDelete.Title} deletion error",
+                    Severity.Error,
+                    config => { config.VisibleStateDuration = 5000; });
+                Console.WriteLine($"Error: {ex.Message}");
+            }
         }
     }
 

@@ -1,0 +1,95 @@
+﻿@page "/login"
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject ProtectedSessionStorage SessionStorage
+
+<PageTitle>Login</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="min-height: 80vh;">
+    <MudPaper Class="pa-8" Elevation="4" Style="width: 100%; max-width: 400px;">
+        <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true">
+            Cinema System
+        </MudText>
+        <MudText Typo="Typo.body1" Align="Align.Center" Class="mb-6" Color="Color.Secondary">
+            Admin Login
+        </MudText>
+
+        <EditForm Model="@this" OnValidSubmit="HandleLogin">
+            <MudTextField @bind-Value="username"
+                          Label="Username"
+                          Variant="Variant.Outlined"
+                          Class="mb-4" />
+
+            <MudTextField @bind-Value="password"
+                          Label="Password"
+                          Variant="Variant.Outlined"
+                          InputType="InputType.Password"
+                          Class="mb-4" />
+
+            <MudButton ButtonType="ButtonType.Submit"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Size="Size.Large"
+                       Disabled="isLoading">
+                @if (isLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                }
+                else
+                {
+                    <span>Login</span>
+                }
+            </MudButton>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4">@errorMessage</MudAlert>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string username = "";
+    private string password = "";
+    private string errorMessage = "";
+    private bool isLoading = false;
+
+    private async Task HandleLogin()
+    {
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "Please enter username and password";
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = "";
+
+        try
+        {
+            var account = await AuthService.LoginAsync(username, password);
+
+            if (account == null)
+            {
+                errorMessage = "Invalid username or password";
+                isLoading = false;
+                return;
+            }
+
+            await SessionStorage.SetAsync("IsLoggedIn", true);
+            await SessionStorage.SetAsync("AdminName", $"{account.Name} {account.Surname}");
+
+            Snackbar.Add($"Welcome, {account.Name}!", Severity.Success);
+            NavigationManager.NavigateTo("/admin");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Login failed";
+            Console.WriteLine($"Login error: {ex.Message}");
+            isLoading = false;
+        }
+    }
+}

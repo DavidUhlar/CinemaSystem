@@ -1,10 +1,12 @@
-﻿namespace CinemaSystem.Models
+﻿using CinemaSystem.Models.Enums;
+
+namespace CinemaSystem.Models
 {
     public class ReservationState
     {
         public int EventId { get; set; }
         public int CustomerId { get; set; }
-        public List<TicketDto> Tickets { get; set; } = new List<TicketDto>();
+        public List<TicketDto> Tickets { get; set; } = [];
         public ReservationStep CurrentStep { get; set; } = ReservationStep.CustomerCreated;
     }
 

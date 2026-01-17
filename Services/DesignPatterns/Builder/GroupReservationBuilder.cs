@@ -1,10 +1,11 @@
 ﻿using CinemaSystem.Models;
+using CinemaSystem.Models.Enums;
 
 namespace CinemaSystem.Services.DesignPatterns.Builder
 {
     public class GroupReservationBuilder : IReservationBuilder
     {
-        private Reservation reservation;
+        private Reservation reservation = null!;
 
         public GroupReservationBuilder()
         {
@@ -13,7 +14,7 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
 
         public Reservation Build()
         {
-            reservation.TotalPrice = reservation.Tickets.Sum(t => t.Price) * 0.85m;
+            reservation.TotalPrice = reservation.Tickets.Sum(t => t.TotalPrice) * 0.85m;
             reservation.ReservationCode = GenerateCode();
             reservation.Status = ReservationStatus.Completed;
             var result = reservation;
@@ -25,7 +26,7 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
         {
             reservation = new Reservation
             {
-                Tickets = new List<Ticket>(),
+                Tickets = [],
                 Status = ReservationStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
             };
@@ -51,9 +52,9 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
             return this;
         }
 
-        public IReservationBuilder SetReservationType(ReservationType type)
+        public IReservationBuilder SetReservationType(ReservationTypeEnum type)
         {
-            reservation.Type = ReservationType.Group;
+            reservation.Type = ReservationTypeEnum.Group;
             return this;
         }
 
@@ -66,7 +67,7 @@ namespace CinemaSystem.Services.DesignPatterns.Builder
             return this;
         }
 
-        private string GenerateCode()
+        private static string GenerateCode()
         {
             return $"RES-GRP-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
         }

@@ -1,6 +1,9 @@
-﻿public enum ReservationStatus
+﻿namespace CinemaSystem.Models.Enums
 {
-    Pending,
-    Cancelled,
-    Completed
+    public enum ReservationStatus
+    {
+        Pending,
+        Cancelled,
+        Completed
+    }
 }

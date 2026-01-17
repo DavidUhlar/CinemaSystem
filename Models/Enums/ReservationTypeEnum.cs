@@ -1,6 +1,9 @@
-﻿public enum ReservationType
+﻿namespace CinemaSystem.Models.Enums
 {
-    Standard,
-    Group
+    public enum ReservationTypeEnum
+    {
+        Standard,
+        Group
+    }
 }
 

@@ -1,15 +1,11 @@
 ﻿using CinemaSystem.Models;
+using CinemaSystem.Models.Enums;
 
 namespace CinemaSystem.Services.DesignPatterns.Decorator
 {
-    public class ClientTicket : IClientTicket
+    public class ClientTicket(TicketDto ticket) : IClientTicket
     {
-        private readonly TicketDto ticket;
-
-        public ClientTicket(TicketDto ticket)
-        {
-            this.ticket = ticket;
-        }
+        private readonly TicketDto ticket = ticket;
 
         public string GetDescription()
         {
