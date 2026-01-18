@@ -27,11 +27,11 @@ else
 
             <MudTable Items="@GetHallRows(hall)" Dense="true" Hover="false" Elevation="0" Class="seat-table">
                 <HeaderContent>
-                    <MudTh>Row</MudTh>
+                    <MudTh Style="text-align:center">Row</MudTh>
                     @for (int seatNumber = 1; seatNumber <= hall.SeatsPerRow; seatNumber++)
                     {
                         var n = seatNumber;
-                        <MudTh Class="text-center">@n</MudTh>
+                        <MudTh Style="text-align:center">@n</MudTh>
                     }
                 </HeaderContent>
                 <RowTemplate>
